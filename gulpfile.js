@@ -4,22 +4,20 @@
 var gulp = require('gulp');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
-var less = require('gulp-less');
-var minifyCSS = require('gulp-minify-css');
 
 gulp.task('build', function() {
-    return gulp.src(['dep/pyscript/src/core.js', 'dep/pyscript/src/*.js',
-        'dep/pyscript/src/modules/*.js', '!dep/**/*.spec.js'])
+    return gulp.src(['src/core.js', 'src/*.js',
+        'src/modules/*.js', '!**/*.spec.js'])
         .pipe(concat('pyscript.min.js'))
         .pipe(uglify())
-        .pipe(gulp.dest('dep/pyscript'));
+        .pipe(gulp.dest('.'));
 });
 
 gulp.task('build-debug', function() {
-    return gulp.src(['dep/pyscript/src/core.js', 'dep/pyscript/src/*.js',
-        'dep/pyscript/src/modules/*.js', '!dep/**/*.spec.js'])
+    return gulp.src(['src/core.js', 'src/*.js',
+        'src/modules/*.js', '!**/*.spec.js'])
         .pipe(concat('pyscript.js'))
-        .pipe(gulp.dest('dep/pyscript'))
+        .pipe(gulp.dest('pyscript.debug.js'))
 });
 
 gulp.task('default', ['build']);
