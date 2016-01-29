@@ -110,7 +110,7 @@ pyscript.initialize = function(name) {
         return mod._initialize();
     }
     else {
-        pyscript.assert("Module {name} is not defined!".sprintf({name: name}))
+        pyscript.assert("Module " + name + " is not defined!")
     }
 };
 

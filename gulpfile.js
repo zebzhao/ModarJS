@@ -20,4 +20,4 @@ gulp.task('build-debug', function() {
         .pipe(gulp.dest('pyscript.debug.js'))
 });
 
-gulp.task('default', ['build']);
+gulp.task('default', ['build', 'build-debug']);

@@ -1,10 +1,6 @@
 /**
  * Created by zeb on 27/11/15.
  */
-function Cache() {
-    self._storage = new Dict();
-}
-
 pyscript.defmodule('cache')
 
     .__init__(function(self) {
