@@ -1,6 +1,6 @@
 # PyScript
 
-PyScript is a lightweight and script loading library mocking Python modules.
+PyScript is a lightweight script loading library mocking Python modules.
 
 ## Getting started
 
@@ -176,6 +176,43 @@ A list of current standard modules can be found below:
 * stringutils - Adds additional methods to String.prototype when initialized.
 * arrayutils - Adds additional methods to Array.prototype when initialized.
 
+### hotkeys
+```
+pyscript.hotkeys.addKey('ctrl-f', function(e, handler) {
+    e.preventDefault();  // Prevents browser default for this shortcut
+    console.log('Ctrl-F was pressed!');
+    console.log(handler);  // Contains meta information about the event.
+});
+```
+
+### requests
+```
+// Standard get request, with authorization header
+pyscript.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
+    .then(function() {
+        console.log('RESPONSE', this.responseText);
+    })
+// Synchronous call
+var xhr = pyscript.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
+console.log(xhr.responseText);
+// Uploading files
+pyscript.requests.upload('https://example.com/api/user/1/files', fileObjectAPI, [arg1, arg2, arg3])
+    .then(function(arg1, arg2, arg3) {
+        console.log(this.responseText);
+    });
+```
+
+### router
+```
+pyscript.router
+    .route("/route1", function(queryParams) {
+        console.log('Route 1:', queryParams);
+    })
+    .route("/route2", function(queryParams) {
+        console.log('Route 2:', queryParams);
+    });
+```
+
 ## Developers
 
 First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build PyScript. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
@@ -218,5 +255,5 @@ Each time you want to work on a fix or a new feature, create a new branch based 
 
 ## Known Issues
 
-In some browsers, if a script HTTP request fails no error will be thrown. You can tell if a script filed to
+In some browsers, when a script HTTP request fails, no error will be thrown. You can tell if a script failed to
 load by checking for missing loaded messages in the browser console.
