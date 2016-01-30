@@ -27,7 +27,6 @@ module.exports = function(config){
         plugins : [
             'karma-jasmine',
             'karma-phantomjs-launcher',
-            'karma-chrome-launcher',
             'karma-coverage'
         ]
     });
