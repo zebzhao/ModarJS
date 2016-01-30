@@ -16,8 +16,8 @@ gulp.task('build', function() {
 gulp.task('build-debug', function() {
     return gulp.src(['src/core.js', 'src/*.js',
         'src/modules/*.js', '!**/*.spec.js'])
-        .pipe(concat('pyscript.js'))
-        .pipe(gulp.dest('pyscript.debug.js'))
+        .pipe(concat('pyscript.debug.js'))
+        .pipe(gulp.dest('.'))
 });
 
 gulp.task('default', ['build', 'build-debug']);
