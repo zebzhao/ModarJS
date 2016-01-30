@@ -22,7 +22,7 @@ pyscript.defmodule('requests')
         put: function(self, url, params, headers, sync) {
             return self._send('PUT', url, params, headers, sync);
         },
-        upload: function(self, url, file, args) {
+        upload: function(self, url, file, sync) {
             pyscript.check(url, String);
 
             var async = pyscript.async();
@@ -32,7 +32,7 @@ pyscript.defmodule('requests')
             var xhr = new XMLHttpRequest();
             xhr.onload = onUploadSuccess;
             xhr.onerror = onUploadError;
-            xhr.open('POST', url, true);
+            xhr.open('POST', url, !sync);
 
             if (self.headers){
                 for (var header in self.headers) {
@@ -53,11 +53,11 @@ pyscript.defmodule('requests')
                     if (exit) return;
                 }
                 self._parseStatus(this);
-                async.bind(this).resolve.apply(async, args);
+                async.bind(this).resolve.apply(async);
             }
             function onUploadError() {
                 self._parseStatus(this);
-                async.bind(this).resolve.apply(async, args);
+                async.bind(this).resolve.apply(async);
             }
         },
         _send: function(self, method, url, params, headers, sync) {

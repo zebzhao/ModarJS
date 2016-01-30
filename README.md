@@ -195,8 +195,8 @@ pyscript.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
 var xhr = pyscript.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
 console.log(xhr.responseText);
 // Uploading files
-pyscript.requests.upload('https://example.com/api/user/1/files', fileObjectAPI, [arg1, arg2, arg3])
-    .then(function(arg1, arg2, arg3) {
+pyscript.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
+    .then(function() {
         console.log(this.responseText);
     });
 ```
