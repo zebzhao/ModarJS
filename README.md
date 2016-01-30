@@ -130,6 +130,31 @@ pyscript.defmodule('mymodule')
         console.log('I am initialized AFTER submodule.')
     });
 ```
+In the case that your submodule has very large dependencies and needs to be loaded in a future point in time:
+```
+// Inside submodule.module.js
+pyscript.defmodule('submodule')
+    .import('very-large-file.js')
+    .__init__(function(self) {
+        // Also import some CSS files upon initialization
+        pyscript.import('LINK', {href: "big-css-1.css"});
+        pyscript.import('LINK', {href: "big-css-2.css"});
+        pyscript.import('LINK', {href: "big-css-3.css"});
+    });
+
+// Inside mymodule.module.js
+pyscript.defmodule('mymodule')
+    .import('submodule.module.js')
+    .initialize('router')   // Load standard module 'router'
+    
+    .__init__(function(self) {
+        pyscript.router
+            .route('submodule', function() {
+                // Initialize submodule when hitting mydomain.com/#submodule
+                pyscript.initialize('submodule');
+            });
+    });
+```
 
 ### Defining Module Methods
 Methods can be defined in a module in the following way:
