@@ -128,7 +128,7 @@ pyscript.defmodule = function (name) {
         _modules: [],
         _instance: instance,
         _status: "",
-        _callbacks: [],
+        _callbacks: pyscript.list(),
 
         import: function(url) {
             self._dependencies.push({url: url});

@@ -1,5 +1,5 @@
 pyscript.defmodule('hotkeys')
-    .__init__(function(self) {
+    .__new__(function(self) {
         self.scope = 'all';
 
         self._keyMap = {

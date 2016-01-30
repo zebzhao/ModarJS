@@ -128,7 +128,7 @@ pyscript.defmodule = function (name) {
         _modules: [],
         _instance: instance,
         _status: "",
-        _callbacks: [],
+        _callbacks: pyscript.list(),
 
         import: function(url) {
             self._dependencies.push({url: url});
@@ -318,7 +318,7 @@ pyscript.prefix = '';
 (function(module) {
     function PyDeferred() {
         var self = this;
-        self._callbacks = [];
+        self._callbacks = pyscript.list();
         self._binding = null;
         self.promise = {
             then: function(callback) {
@@ -336,7 +336,7 @@ pyscript.prefix = '';
         resolve: function() {
             var args = arguments;
             var self = this;
-            this._callbacks.apply(function (i, e) {
+            this._callbacks.invoke(function (i, e) {
                 e.apply(self._binding, args);
             })
         }
@@ -401,54 +401,18 @@ pyscript.prefix = '';
 
 })(pyscript);
 
-pyscript.defmodule('arrayutils')
-    .__init__(function() {
-        Array.prototype.unique = function() {
+(function(module) {
+    function PyList(obj) {
+        module.extend(this, obj);
+    }
+
+    module.extend(PyList.prototype, {
+        unique: function() {
             return this.filter(function(a,b,c) {
                 return c.indexOf(a, b + 1) == -1;
             })
-        };
-
-        Array.prototype.remove = function(e) {
-            var index = this.indexOf(e);
-            if (index >= 0) {
-                this.splice(index, 1);
-                return index;
-            }
-            return false;
-        };
-
-        Array.prototype.copy = function() {
-            return this.slice();
-        };
-
-        Array.prototype.first = function() {
-            return this[0];
-        };
-
-        Array.prototype.last = function() {
-            return this[this.length-1];
-        };
-
-        Array.prototype.apply = function(operator) {
-            pyscript.check(operator, Function);
-            var result = [];
-            for (var i=0; i < this.length; i++) {
-                result[i] = operator.call(this, i, this[i]);
-            }
-            return result;
-        };
-
-        Array.prototype.each = function(operator) {
-            pyscript.check(operator, Function);
-            var result = [];
-            for (var i=0; i < this.length; i++) {
-                result[i] = operator.call(this, this[i]);
-            }
-            return result;
-        };
-
-        Array.prototype.find = function(key, value) {
+        },
+        find: function(key, value) {
             pyscript.check(key, String);
             var matches = [];
             for (var i=0; i < this.length; i++) {
@@ -457,8 +421,93 @@ pyscript.defmodule('arrayutils')
                 }
             }
             return matches;
-        };
+        },
+        each: function(operator) {
+            pyscript.check(operator, Function);
+            var result = [];
+            for (var i=0; i < this.length; i++) {
+                result[i] = operator.call(this, this[i]);
+            }
+            return result;
+        },
+        invoke: function(operator) {
+            pyscript.check(operator, Function);
+            var result = [];
+            for (var i=0; i < this.length; i++) {
+                result[i] = operator.call(this, i, this[i]);
+            }
+            return result;
+        },
+        first: function() {
+            return this[0];
+        },
+        last: function() {
+            return this[this.length-1];
+        },
+        remove: function(e) {
+            var index = this.indexOf(e);
+            if (index >= 0) {
+                this.splice(index, 1);
+                return index;
+            }
+            return false;
+        }
     });
+
+    module.list = function(list) {
+        return new PyList(list || []);
+    };
+
+})(pyscript);
+
+(function(module) {
+    function PyString(obj) {
+        module.extend(this, obj);
+    }
+
+    module.extend(PyString.prototype, {
+        contains: function(text) {
+            return this.indexOf(text) != -1;
+        },
+        ellipsis: function(length) {
+            length = length || 18;
+            return this.length > length ? this.substr(0, length-3) + '...' : this;
+        },
+        endsWith: function(suffix) {
+            return this.indexOf(suffix, this.length - suffix.length) !== -1;
+        },
+        beginsWith: function(prefix) {
+            return this.indexOf(prefix) == 0;
+        },
+        replaceLastIndexOf: function(searchValue, replaceValue) {
+            var n = this.lastIndexOf(searchValue);
+            if (n >= 0) {
+                return this.substring(0, n) + replaceValue;
+            }
+        },
+        toCamelCase: function() {
+            return this.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+                if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+                return index == 0 ? match.toLowerCase() : match.toUpperCase();
+            });
+        },
+        sprintf: function(obj) {
+            var str = this;
+            for (var name in obj) {
+                if (obj.hasOwnProperty(name)) {
+                    var regex = new RegExp("{" + name + "}", "gi");
+                    str = this.replace(regex, obj[name]);
+                }
+            }
+            return str;
+        }
+    });
+
+    module.str = function(str) {
+        return new PyString(str || '');
+    };
+
+})(pyscript);
 
 pyscript.defmodule('cache')
 
@@ -586,7 +635,7 @@ pyscript.defmodule('cache')
 
 pyscript.cache = pyscript.module('cache');
 pyscript.defmodule('hotkeys')
-    .__init__(function(self) {
+    .__new__(function(self) {
         self.scope = 'all';
 
         self._keyMap = {
@@ -903,47 +952,3 @@ pyscript.defmodule('router')
     });
 
 pyscript.router = pyscript.module('router');
-pyscript.defmodule('arrayutils')
-    .__init__(function() {
-        String.prototype.contains = function(text) {
-            return this.indexOf(text) != -1;
-        };
-
-        String.prototype.ellipsis = function(length) {
-            length = length || 18;
-            return this.length > length ? this.substr(0, length-3) + '...' : this;
-        };
-
-        String.prototype.endsWith = function(suffix) {
-            return this.indexOf(suffix, this.length - suffix.length) !== -1;
-        };
-
-        String.prototype.beginsWith = function(prefix) {
-            return this.indexOf(prefix) == 0;
-        };
-
-        String.prototype.replaceLastIndexOf = function(searchValue, replaceValue) {
-            var n = this.lastIndexOf(searchValue);
-            if (n >= 0) {
-                return this.substring(0, n) + replaceValue;
-            }
-        };
-
-        String.prototype.toCamelCase = function() {
-            return this.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
-                if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
-                return index == 0 ? match.toLowerCase() : match.toUpperCase();
-            });
-        };
-
-        String.prototype.sprintf = function(obj) {
-            var str = this;
-            for (var name in obj) {
-                if (obj.hasOwnProperty(name)) {
-                    var regex = new RegExp("{" + name + "}", "gi");
-                    str = this.replace(regex, obj[name]);
-                }
-            }
-            return str;
-        };
-    });

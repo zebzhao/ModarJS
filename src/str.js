@@ -1,37 +1,35 @@
-pyscript.defmodule('arrayutils')
-    .__init__(function() {
-        String.prototype.contains = function(text) {
-            return this.indexOf(text) != -1;
-        };
+(function(module) {
+    function PyString(obj) {
+        module.extend(this, obj);
+    }
 
-        String.prototype.ellipsis = function(length) {
+    module.extend(PyString.prototype, {
+        contains: function(text) {
+            return this.indexOf(text) != -1;
+        },
+        ellipsis: function(length) {
             length = length || 18;
             return this.length > length ? this.substr(0, length-3) + '...' : this;
-        };
-
-        String.prototype.endsWith = function(suffix) {
+        },
+        endsWith: function(suffix) {
             return this.indexOf(suffix, this.length - suffix.length) !== -1;
-        };
-
-        String.prototype.beginsWith = function(prefix) {
+        },
+        beginsWith: function(prefix) {
             return this.indexOf(prefix) == 0;
-        };
-
-        String.prototype.replaceLastIndexOf = function(searchValue, replaceValue) {
+        },
+        replaceLastIndexOf: function(searchValue, replaceValue) {
             var n = this.lastIndexOf(searchValue);
             if (n >= 0) {
                 return this.substring(0, n) + replaceValue;
             }
-        };
-
-        String.prototype.toCamelCase = function() {
+        },
+        toCamelCase: function() {
             return this.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
                 if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
                 return index == 0 ? match.toLowerCase() : match.toUpperCase();
             });
-        };
-
-        String.prototype.sprintf = function(obj) {
+        },
+        sprintf: function(obj) {
             var str = this;
             for (var name in obj) {
                 if (obj.hasOwnProperty(name)) {
@@ -40,5 +38,11 @@ pyscript.defmodule('arrayutils')
                 }
             }
             return str;
-        };
+        }
     });
+
+    module.str = function(str) {
+        return new PyString(str || '');
+    };
+
+})(pyscript);

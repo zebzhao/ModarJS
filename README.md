@@ -174,8 +174,6 @@ A list of current standard modules can be found below:
 * hotkeys - For handling keyboard shortcuts.
 * requests - For http methods and uploads with ajax.
 * router - For handling client `hashchange` events.
-* stringutils - Adds additional methods to String.prototype when initialized.
-* arrayutils - Adds additional methods to Array.prototype when initialized.
 
 ### hotkeys
 ```

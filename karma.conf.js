@@ -6,7 +6,7 @@ module.exports = function(config){
         logLevel: config.LOG_DEBUG,
 
         files : [
-            'pyscript.js',
+            'pyscript.debug.js',
             '**/*.spec.js'
         ],
 
