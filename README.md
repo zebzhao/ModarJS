@@ -7,9 +7,9 @@ PyScript is a lightweight script loading library mocking Python modules.
 Getting started
 ---
 
-You have following options to get UIkit:
+You have following options to get PyScript:
 
-- Download the [latest release](https://github.com/zebzhao/pyscript/releases/latest)
+- Download the [latest release](https://github.com/zebzhao/PyScript/releases/latest)
 - Clone the repo, `git clone git://github.com/zebzhao/pyscript.git`.
 - Install with [Bower](http://bower.io): ```bower install pyscript```
 
@@ -29,29 +29,29 @@ Usage
 Start by including the file in your main HTML file.
 
 For debugging
-```
-<script src="dep/pykit/pykit.debug.js" type="text/javascript"></script>
+```html
+<script src="dep/pyscript/pyscript.debug.js" type="text/javascript"></script>
 ```
 
 For production
-```
-<script src="dep/pykit/pykit.min.js" type="text/javascript"></script>
+```html
+<script src="dep/pyscript/pyscript.min.js" type="text/javascript"></script>
 ```
 
 ## Defining modules
 
 Modules are like python modules and can contain definitions of functions and variables.
-```
+```javascript
 pyscript.defmodule('mymodule')
 ```
 To access the module one can use a function call, or access it through a variable:
-```
+```javascript
 pyscript.module('mymodule')
 // which is the same as:
 pyscript.modules['mymodule']
 ```
 There are also standard modules which can be accessed this way:
-```
+```javascript
 // List of standard modules included with PyScript
 pyscript.requests
 pyscript.cache
@@ -61,11 +61,11 @@ pyscript.hotkeys
 
 ## Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
-```
+```javascript
 pyscript.import('SCRIPT', 'mymodule.js', callback)
 ```
 When a module is loaded, its `__new__` method is automatically invoked.
-```
+```javascript
 pyscript.defmodule('mymodule')
     .__new__(function(self) {
         console.log('I am loaded!');
@@ -75,7 +75,7 @@ pyscript.defmodule('mymodule')
     });
 ```
 Note that multiple `__new__` functions can be defined, and will be invoked in the defined order:
-```
+```javascript
 pyscript.defmodule('mymodule')
     .__new__(function(self) {
         console.log('I am first')
@@ -93,19 +93,19 @@ pyscript.defmodule('mymodule')
 
 ## Initializing modules
 After a module is loaded, it needs to be initialized. To initialize a module:
-```
+```javascript
 pyscript.initialize('mymodule')
 ```
 When a module is initialized, its `__init__` method is automatically invoked.
 Additionally, any dependencies that were defined for the module are also loaded.
-```
+```javascript
 pyscript.defmodule('mymodule')
     .__init__(function(self) {
         console.log('I am initialized')
     });
 ```
 Similarly, when defining multiple `__init__` handlers, the same rules apply as `__new__`.
-```
+```javascript
 pyscript.defmodule('mymodule')
     .__init__(function(self) {
         self.a = 5;
@@ -116,7 +116,7 @@ pyscript.defmodule('mymodule')
     });
 ```
 When a module is initialized, its dependencies will be loaded.
-```
+```javascript
 pyscript.defmodule('mymodule')
     .import('jquery.min.js')
     .import('angular.min.js')
@@ -127,7 +127,7 @@ pyscript.initialize('mymodule');
 ```
 
 Loading submodules can also be done. In the scenario that you have 1 module that relies on another module:
-```
+```javascript
 // Inside submodule.module.js
 pyscript.defmodule('submodule')
     .__init__(function(self) {
@@ -144,7 +144,7 @@ pyscript.defmodule('mymodule')
     });
 ```
 In the case that your submodule has very large dependencies and needs to be loaded in a future point in time:
-```
+```javascript
 // Inside submodule.module.js
 pyscript.defmodule('submodule')
     .import('very-large-file.js')
@@ -171,7 +171,7 @@ pyscript.defmodule('mymodule')
 
 ## Defining Module Methods
 Methods can be defined in a module in the following way:
-```
+```javascript
 pyscript.defmodule('mymodule')
     .def({
         testMethod1: function(self, string) {
@@ -194,9 +194,9 @@ Additional properties that are defined on top of module instances.
 Standard modules
 ---
 
-To use a standard module, you need to first initialize it. Note that standard modules do not be loaded as they
+To use a standard module, you need to first initialize it. Note that standard modules do not need to be loaded as they
 are included with PyScript.
-```
+```javascript
 pyscript.defmodule('mymodule')
     .initialize('hotkeys')
     .__init__(function(self) {
@@ -215,7 +215,7 @@ A list of current standard modules can be found below:
 * router - For handling client `hashchange` events.
 
 ### hotkeys
-```
+```javascript
 pyscript.hotkeys.addKey('ctrl-f', function(e, handler) {
     e.preventDefault();  // Prevents browser default for this shortcut
     console.log('Ctrl-F was pressed!');
@@ -224,7 +224,7 @@ pyscript.hotkeys.addKey('ctrl-f', function(e, handler) {
 ```
 
 ### requests
-```
+```javascript
 // Standard get request, with authorization header
 pyscript.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
     .then(function() {
@@ -241,7 +241,7 @@ pyscript.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
 ```
 
 ### router
-```
+```javascript
 pyscript.router
     .route("/route1", function(queryParams) {
         console.log('Route 1:', queryParams);
@@ -251,15 +251,15 @@ pyscript.router
     });
 ```
 
-## Developers
-
+Developers
+---
 First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build PyScript. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
 
 ```
 npm install --global gulp
 ```
 
-If you haven't done so already, clone the UIkit git repo.
+If you haven't done so already, clone the PyScript git repo.
 
 ```
 git clone git://github.com/zebzhao/pyscript.git
@@ -281,11 +281,11 @@ gulp build-debug
 
 The built version of PyScript will be put in the same folder as ```pyscript.min.js``` and ```pyscript.debug.js```.
 
-### Tests
+## Tests
 
 All tests are contained in the `tests` folder. Tests can be run using `npm test`.
 
-### Contributing
+## Contributing
 
 PyScript follows the [GitFlow branching model](http://nvie.com/posts/a-successful-git-branching-model). The ```master``` branch always reflects a production-ready state while the latest development is taking place in the ```develop``` branch.
 

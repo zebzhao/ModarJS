@@ -1,0 +1,14 @@
+{
+  "name": "pyscript",
+  "version": "0.1.0",
+  "homepage": "https://github.com/zebzhao/PyScript",
+  "dependencies": {},
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "src",
+    "gulpfile.js",
+    "karma.conf.js",
+    "package.json"
+  ]
+}
