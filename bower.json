@@ -7,8 +7,11 @@
     "node_modules",
     "bower_components",
     "src",
+    "tests",
     "gulpfile.js",
     "karma.conf.js",
-    "package.json"
+    "package.json",
+    "bower.json",
+    ".gitignore"
   ]
 }
