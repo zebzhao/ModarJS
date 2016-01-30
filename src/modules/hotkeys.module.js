@@ -35,7 +35,22 @@ pyscript.defmodule('hotkeys')
         }
     })
     .__init__(function(self) {
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', self.dispatchKeyEvent);
+        document.addEventListener('keyup', self.clearModifiers);
+    })
+    .def({
+        clearModifiers: function(event){
+            var key = event.keyCode,
+                i = self._downKeys.indexOf(key);
+
+            if(i>=0) self._downKeys.splice(i,1);
+
+            if(key === 93 || key === 224) key = 91;
+            if(key in self._mods) {
+                self._mods[key] = false;
+            }
+        },
+        dispatchKeyEvent: function(self, event) {
             var key = event.keyCode;
 
             if(self._downKeys.indexOf(key)===-1) self._downKeys.push(key);
@@ -55,22 +70,7 @@ pyscript.defmodule('hotkeys')
                 handler = self._handlers[key][i];
                 handler.method(event, handler);
             }
-        });
-
-        document.addEventListener('keyup',function(event){
-            // Clear modifiers
-            var key = event.keyCode,
-                i = self._downKeys.indexOf(key);
-
-            if(i>=0) self._downKeys.splice(i,1);
-
-            if(key === 93 || key === 224) key = 91;
-            if(key in self._mods) {
-                self._mods[key] = false;
-            }
-        });
-    })
-    .def({
+        },
         getKeys: function(self, key) {
             var keys = key.replace(/\s/g, '').split(',');
             if ((keys[keys.length - 1]) === '') keys[keys.length - 2] += ',';
