@@ -83,10 +83,9 @@ pyscript.partial = function(callback) {
     }
 };
 
-pyscript.import = function(tagName, props, callback, append) {
+pyscript.import = function(tagName, props, callback) {
     var element = document.createElement(tagName);
-    if (append)
-        document.head.appendChild(element);
+    document.head.appendChild(element);
     // Async may not be effective due to ajax protocols and queueing
     element.onload = callback;
     pyscript.extend(element, props);
