@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 17/09/15.
- */
 (function(module) {
     module.extend(module, {
         assert: function(cond, message, log) {

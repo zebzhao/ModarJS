@@ -1,13 +1,4 @@
-/**
- * Created by zeb on 11/10/15.
- */
-
 window.pyscript = {modules: {}};
-
-/**
- * @param [kwargs] {Object}
- * @returns {PyDict}
- */
 
 pyscript.defer = function(callback) {
     setTimeout(callback, 1);

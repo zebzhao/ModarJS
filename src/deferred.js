@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 03/10/15.
- */
 (function(module) {
     function PyDeferred() {
         var self = this;

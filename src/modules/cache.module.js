@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 27/11/15.
- */
 pyscript.defmodule('cache')
 
     .__init__(function(self) {
@@ -125,5 +122,4 @@ pyscript.defmodule('cache')
         }
     });
 
-pyscript.initialize('cache');
 pyscript.cache = pyscript.module('cache');

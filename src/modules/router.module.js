@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 17/09/15.
- */
 pyscript.defmodule('router')
 
     .__init__(function(self) {
@@ -55,7 +52,11 @@ pyscript.defmodule('router')
         },
         parseQuery: function() {
             var hash = window.location.hash;
-            var query = hash.contains("?") ? hash.slice(2).split("?").last().split("&") : [];
+            var query = [];
+            if (hash.contains("?")) {
+                query = hash.slice(2).split("?");
+                query = query[query.length-1].split("&");
+            }
             var queryParams = {};
             var valuePair;
             query.apply(function(i, elem) {
@@ -96,5 +97,4 @@ pyscript.defmodule('router')
         }
     });
 
-pyscript.initialize('router');
 pyscript.router = pyscript.module('router');

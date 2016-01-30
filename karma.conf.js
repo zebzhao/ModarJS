@@ -7,7 +7,7 @@ module.exports = function(config){
 
         files : [
             'pyscript.js',
-            'src/*.spec.js'
+            '**/*.spec.js'
         ],
 
         exclude : [

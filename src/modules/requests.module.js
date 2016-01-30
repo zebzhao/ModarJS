@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 17/09/15.
- */
 pyscript.defmodule('requests')
 
     .__init__(function(self) {
@@ -114,5 +111,4 @@ pyscript.defmodule('requests')
         }
     });
 
-pyscript.initialize('requests');
 pyscript.requests = pyscript.module('requests');

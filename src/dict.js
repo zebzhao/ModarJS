@@ -1,6 +1,3 @@
-/**
- * Created by zeb on 03/10/15.
- */
 (function(module) {
     function PyDict(obj) {
         module.extend(this, obj);
