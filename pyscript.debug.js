@@ -155,7 +155,7 @@ pyscript.defmodule = function (name) {
         },
 
         __init__: function(callback) {
-            self._callbacks.push(callback);
+            self._callbacks.append(callback);
             return self;
         },
         __new__: function(callback) {
@@ -170,9 +170,12 @@ pyscript.defmodule = function (name) {
                 return async.promise;
             }
             else if (self._status == "loading") {
-                self._callbacks.push(function() {
+                console.log(self._callbacks.array, 'eeee')
+                self._callbacks.append(function() {
+                    console.log('23242')
                     async.resolve(instance);
                 });
+                console.log(self._callbacks, 'eee2')
                 return async.promise;
             }
             else if (pyscript.debug) console.log("%c" + name + " loading...", "color:DodgerBlue;");
@@ -210,16 +213,16 @@ pyscript.defmodule = function (name) {
                 if (self._modules.length == loaded_modules_count) {
                     // Defer to next frame, as success callback may not be registered yet.
                     pyscript.defer(function() {
-                        pyscript.map(function(cb) {
+                        self._status = "loaded";
+                        console.log('cccb', self._callbacks.array)
+                        self._callbacks.invoke(function(cb) {
                             cb.call(null, instance);
-                        }, self._callbacks);
+                        });
 
                         async.resolve(instance);
                         if (pyscript.debug) console.log("%c" + name + " loaded", "font-weight:bold;");
 
                         instance.__initialized__ = true;
-
-                        self._status = "loaded";
                     });
                 }
                 else {
@@ -322,7 +325,7 @@ pyscript.prefix = '';
         self._binding = null;
         self.promise = {
             then: function(callback) {
-                self._callbacks.push(callback);
+                self._callbacks.append(callback);
                 return self.promise;
             }
         }
@@ -336,7 +339,7 @@ pyscript.prefix = '';
         resolve: function() {
             var args = arguments;
             var self = this;
-            this._callbacks.invoke(function (i, e) {
+            this._callbacks.invoke(function (e) {
                 e.apply(self._binding, args);
             })
         }
@@ -403,21 +406,24 @@ pyscript.prefix = '';
 
 (function(module) {
     function PyList(obj) {
-        module.extend(this, obj);
+        this.array = obj;
     }
 
     module.extend(PyList.prototype, {
+        append: function(e) {
+            this.array.push(e);
+        },
         unique: function() {
-            return this.filter(function(a,b,c) {
+            return this.array.filter(function(a,b,c) {
                 return c.indexOf(a, b + 1) == -1;
             })
         },
         find: function(key, value) {
             pyscript.check(key, String);
             var matches = [];
-            for (var i=0; i < this.length; i++) {
-                if (value == this[i][key]) {
-                    matches.push(this[i]);
+            for (var i=0; i < this.array.length; i++) {
+                if (value == this.array[i][key]) {
+                    matches.push(this.array[i]);
                 }
             }
             return matches;
@@ -425,29 +431,29 @@ pyscript.prefix = '';
         each: function(operator) {
             pyscript.check(operator, Function);
             var result = [];
-            for (var i=0; i < this.length; i++) {
-                result[i] = operator.call(this, this[i]);
+            for (var i=0; i < this.array.length; i++) {
+                result[i] = operator.call(this, this.array[i]);
             }
             return result;
         },
         invoke: function(operator) {
             pyscript.check(operator, Function);
             var result = [];
-            for (var i=0; i < this.length; i++) {
-                result[i] = operator.call(this, i, this[i]);
+            for (var i=0; i < this.array.length; i++) {
+                result[i] = operator.call(this, this.array[i], i, this.array);
             }
             return result;
         },
         first: function() {
-            return this[0];
+            return this.array[0];
         },
         last: function() {
-            return this[this.length-1];
+            return this.array[this.array.length-1];
         },
         remove: function(e) {
-            var index = this.indexOf(e);
+            var index = this.array.indexOf(e);
             if (index >= 0) {
-                this.splice(index, 1);
+                this.array.splice(index, 1);
                 return index;
             }
             return false;
@@ -665,7 +671,7 @@ pyscript.defmodule('hotkeys')
             '⌘': 91, command: 91
         };
         self._mods = { 16: false, 18: false, 17: false, 91: false };
-        self._handlers={};
+        self._handlers = {};
         for(var k=1;k<20;k++) {
             self._keyMap['f'+k] = 111+k;
         }
@@ -723,11 +729,12 @@ pyscript.defmodule('hotkeys')
             for(var lastKey,i=0;i < keys.length; i++){
                 lastKey = keys[i].split('-');
                 lastKey = lastKey[lastKey.length-1];
+                lastKey = self._keyMap[lastKey] || lastKey.charCodeAt(0);
 
-                if (!(key in self._handlers))
-                    self._handlers[key] = [];
+                if (!(lastKey in self._handlers))
+                    self._handlers[lastKey] = [];
 
-                self._handlers[key].push({shortcut: keys[i], scope: scope, method: method, key: keys[i]});
+                self._handlers[lastKey].push({shortcut: keys[i], scope: scope, method: method, key: keys[i]});
             }
         },
         filter: function(self, event){
@@ -762,7 +769,7 @@ pyscript.defmodule('requests')
         put: function(self, url, params, headers, sync) {
             return self._send('PUT', url, params, headers, sync);
         },
-        upload: function(self, url, file, args) {
+        upload: function(self, url, file, sync) {
             pyscript.check(url, String);
 
             var async = pyscript.async();
@@ -772,7 +779,7 @@ pyscript.defmodule('requests')
             var xhr = new XMLHttpRequest();
             xhr.onload = onUploadSuccess;
             xhr.onerror = onUploadError;
-            xhr.open('POST', url, true);
+            xhr.open('POST', url, !sync);
 
             if (self.headers){
                 for (var header in self.headers) {
@@ -793,11 +800,11 @@ pyscript.defmodule('requests')
                     if (exit) return;
                 }
                 self._parseStatus(this);
-                async.bind(this).resolve.apply(async, args);
+                async.bind(this).resolve.apply(async);
             }
             function onUploadError() {
                 self._parseStatus(this);
-                async.bind(this).resolve.apply(async, args);
+                async.bind(this).resolve.apply(async);
             }
         },
         _send: function(self, method, url, params, headers, sync) {

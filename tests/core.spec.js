@@ -1,4 +1,4 @@
-describe('PyScript', function () {
+describe('pyscript', function () {
     it('partial should inject arguments', function() {
         var functions = {
             abc: function(a, b, c, d, e, f) {

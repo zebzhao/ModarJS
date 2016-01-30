@@ -155,7 +155,7 @@ pyscript.defmodule = function (name) {
         },
 
         __init__: function(callback) {
-            self._callbacks.push(callback);
+            self._callbacks.append(callback);
             return self;
         },
         __new__: function(callback) {
@@ -170,7 +170,7 @@ pyscript.defmodule = function (name) {
                 return async.promise;
             }
             else if (self._status == "loading") {
-                self._callbacks.push(function() {
+                self._callbacks.append(function() {
                     async.resolve(instance);
                 });
                 return async.promise;
@@ -210,16 +210,16 @@ pyscript.defmodule = function (name) {
                 if (self._modules.length == loaded_modules_count) {
                     // Defer to next frame, as success callback may not be registered yet.
                     pyscript.defer(function() {
-                        pyscript.map(function(cb) {
+                        self._status = "loaded";
+
+                        self._callbacks.invoke(function(cb) {
                             cb.call(null, instance);
-                        }, self._callbacks);
+                        });
 
                         async.resolve(instance);
                         if (pyscript.debug) console.log("%c" + name + " loaded", "font-weight:bold;");
 
                         instance.__initialized__ = true;
-
-                        self._status = "loaded";
                     });
                 }
                 else {

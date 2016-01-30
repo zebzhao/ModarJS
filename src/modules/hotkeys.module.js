@@ -29,7 +29,7 @@ pyscript.defmodule('hotkeys')
             '⌘': 91, command: 91
         };
         self._mods = { 16: false, 18: false, 17: false, 91: false };
-        self._handlers={};
+        self._handlers = {};
         for(var k=1;k<20;k++) {
             self._keyMap['f'+k] = 111+k;
         }
@@ -87,11 +87,12 @@ pyscript.defmodule('hotkeys')
             for(var lastKey,i=0;i < keys.length; i++){
                 lastKey = keys[i].split('-');
                 lastKey = lastKey[lastKey.length-1];
+                lastKey = self._keyMap[lastKey] || lastKey.charCodeAt(0);
 
-                if (!(key in self._handlers))
-                    self._handlers[key] = [];
+                if (!(lastKey in self._handlers))
+                    self._handlers[lastKey] = [];
 
-                self._handlers[key].push({shortcut: keys[i], scope: scope, method: method, key: keys[i]});
+                self._handlers[lastKey].push({shortcut: keys[i], scope: scope, method: method, key: keys[i]});
             }
         },
         filter: function(self, event){
