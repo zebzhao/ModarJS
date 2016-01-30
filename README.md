@@ -170,6 +170,7 @@ pyscript.defmodule('mymodule')
 
 A list of current standard modules can be found below:
 
+* cache - For caching text on client-side.
 * hotkeys - For handling keyboard shortcuts.
 * requests - For http methods and uploads with ajax.
 * router - For handling client `hashchange` events.
