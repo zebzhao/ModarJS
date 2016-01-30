@@ -53,16 +53,16 @@ pyscript.defmodule('router')
         parseQuery: function() {
             var hash = window.location.hash;
             var query = [];
-            if (hash.contains("?")) {
+            if (hash.indexOf("?")) {
                 query = hash.slice(2).split("?");
                 query = query[query.length-1].split("&");
             }
             var queryParams = {};
             var valuePair;
-            query.apply(function(i, elem) {
+            pyscript.map(function(elem) {
                 valuePair = elem.split("=");
                 queryParams[valuePair[0]] = decodeURIComponent(valuePair[1]);
-            });
+            }, query);
             return queryParams;
         },
         asQueryString: function(self, params) {

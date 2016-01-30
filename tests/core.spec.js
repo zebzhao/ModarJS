@@ -11,14 +11,14 @@ describe('pyscript', function () {
         expect(functions.abc.call(0, 4, 5, 6)).toEqual([1, 2, 3, 4, 5, 6]);
     });
 
-    it('map should map', function() {
+    it('map', function() {
         expect(pyscript.map(function (x) { return x*2 },
             [1, 2, 3])).toEqual([2, 4, 6]);
         expect(pyscript.map(function (x) { return x*2 },
             {1:1, 2:2, 3:3})).toEqual({1:2, 2:4, 3:6});
     });
 
-    it('type should give type', function() {
+    it('type', function() {
         expect(pyscript.type(function () {})).toBe('function');
     });
 
@@ -28,9 +28,19 @@ describe('pyscript', function () {
         expect(pyscript.extend({a: "1"}, {a: null})).toEqual({a: null});
     });
 
-    it('range should be work', function() {
+    it('range', function() {
         expect(pyscript.range(3)).toEqual([0, 1, 2]);
         expect(pyscript.range(3, 6)).toEqual([3, 4, 5]);
         expect(pyscript.range(3, 6, 2)).toEqual([3, 5]);
-    })
+    });
+
+    it('any', function() {
+        expect(pyscript.any(function(a) {return a==1}, {'1': 1, '2': 2})).toBeTruthy();
+        expect(pyscript.any(function(a) {return a==2}, {'2': 1})).toBeFalsy();
+    });
+
+    it('all', function() {
+        expect(pyscript.all(function(a) {return a==1}, {'1': 1, '2': 2})).toBeFalsy();
+        expect(pyscript.all(function(a) {return a==1}, {'2': 1})).toBeTruthy();
+    });
 });

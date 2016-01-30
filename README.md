@@ -49,7 +49,7 @@ pyscript.hotkeys
 ### Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
 ```
-pyscript.import('mymodule')
+pyscript.import('SCRIPT', 'mymodule.js', callback)
 ```
 When a module is loaded, its `__new__` method is automatically invoked.
 ```
@@ -207,7 +207,7 @@ pyscript.router
     .route("/route1", function(queryParams) {
         console.log('Route 1:', queryParams);
     })
-    .route("/route2", function(queryParams) {
+    .route(["/route2", "/route2-1", "/route2-*"], function(queryParams) {
         console.log('Route 2:', queryParams);
     });
 ```

@@ -1,3 +1,12 @@
-/**
- * Created by zeb on 30/01/16.
- */
+describe('router.module', function () {
+    it('should monitor hash changes', function(done) {
+        pyscript.initialize('router')
+            .then(function() {
+                pyscript.router
+                    .route('/test', function() {
+                        done();
+                    });
+                window.location.hash = '/test';
+            });
+    });
+});
