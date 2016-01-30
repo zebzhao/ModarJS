@@ -1,17 +1,30 @@
 # PyScript
 
+[![Build Status](https://travis-ci.org/zebzhao/PyScript.svg?branch=master)](https://travis-ci.org/zebzhao/PyScript)
+
 PyScript is a lightweight script loading library mocking Python modules.
 
-## Getting started
+Getting started
+---
 
 You have following options to get UIkit:
 
 - Download the [latest release](https://github.com/zebzhao/pyscript/releases/latest)
 - Clone the repo, `git clone git://github.com/zebzhao/pyscript.git`.
 - Install with [Bower](http://bower.io): ```bower install pyscript```
-- Install with [npm](http://npmjs.com): ```npm install pyscript```
 
-## Usage
+Table of Contents
+---
+
+1. [Defining modules](#defining-modules)
+1. [Loading modules](#loading-modules)
+1. [Initializing modules](#initializing-modules)
+1. [Defining Module Methods](#defining-module-methods)
+1. [Special Properties](#special-properties)
+1. [Standard modules](#standard-modules)
+
+Usage
+---
 
 Start by including the file in your main HTML file.
 
@@ -25,7 +38,7 @@ For production
 <script src="dep/pykit/pykit.min.js" type="text/javascript"></script>
 ```
 
-### Defining a module
+## Defining modules
 
 Modules are like python modules and can contain definitions of functions and variables.
 ```
@@ -46,7 +59,7 @@ pyscript.router
 pyscript.hotkeys
 ```
 
-### Loading modules
+## Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
 ```
 pyscript.import('SCRIPT', 'mymodule.js', callback)
@@ -78,7 +91,7 @@ pyscript.defmodule('mymodule')
     });
 ```
 
-### Initializing modules
+## Initializing modules
 After a module is loaded, it needs to be initialized. To initialize a module:
 ```
 pyscript.initialize('mymodule')
@@ -156,7 +169,7 @@ pyscript.defmodule('mymodule')
     });
 ```
 
-### Defining Module Methods
+## Defining Module Methods
 Methods can be defined in a module in the following way:
 ```
 pyscript.defmodule('mymodule')
@@ -172,13 +185,14 @@ pyscript.modules['mymodule'].callsMethod1('Awesome');
 Note that the methods are defined on the module instance and injected with a self argument.
 The self argument is a reference to the module instance.
 
-### Special Properties
+## Special Properties
 Additional properties that are defined on top of module instances.
 
  * `__name__` - name of module defined by `defmodule(name)`
  * `__initialized__` - true only when the module has finished initializing
  
-## Standard modules
+Standard modules
+---
 
 To use a standard module, you need to first initialize it. Note that standard modules do not be loaded as they
 are included with PyScript.
