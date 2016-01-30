@@ -210,14 +210,14 @@ pyscript.defmodule = function (name) {
                 if (self._modules.length == loaded_modules_count) {
                     // Defer to next frame, as success callback may not be registered yet.
                     pyscript.defer(function() {
-                        instance.__initialized__ = true;
-
                         pyscript.map(function(cb) {
                             cb.call(null, instance);
                         }, self._callbacks);
 
                         async.resolve(instance);
                         if (pyscript.debug) console.log("%c" + name + " loaded", "font-weight:bold;");
+
+                        instance.__initialized__ = true;
 
                         self._status = "loaded";
                     });
