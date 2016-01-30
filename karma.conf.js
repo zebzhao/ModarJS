@@ -16,6 +16,7 @@ module.exports = function(config){
         reporters: ['progress', 'coverage'],
 
         preprocessors: {
+            'pyscript.debug.js': ['coverage']
         },
 
         autoWatch : false,

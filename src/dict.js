@@ -1,5 +1,6 @@
 (function(module) {
     function PyDict(obj) {
+        pyscript.check(obj, {});
         module.extend(this, obj);
     }
 
@@ -48,7 +49,7 @@
     });
 
     module.dict = function(kwargs) {
-        return new PyDict(kwargs);
+        return new PyDict(kwargs || {});
     };
 
 })(pyscript);

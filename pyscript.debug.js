@@ -170,12 +170,9 @@ pyscript.defmodule = function (name) {
                 return async.promise;
             }
             else if (self._status == "loading") {
-                console.log(self._callbacks.array, 'eeee')
                 self._callbacks.append(function() {
-                    console.log('23242')
                     async.resolve(instance);
                 });
-                console.log(self._callbacks, 'eee2')
                 return async.promise;
             }
             else if (pyscript.debug) console.log("%c" + name + " loading...", "color:DodgerBlue;");
@@ -214,7 +211,7 @@ pyscript.defmodule = function (name) {
                     // Defer to next frame, as success callback may not be registered yet.
                     pyscript.defer(function() {
                         self._status = "loaded";
-                        console.log('cccb', self._callbacks.array)
+
                         self._callbacks.invoke(function(cb) {
                             cb.call(null, instance);
                         });
@@ -351,6 +348,7 @@ pyscript.prefix = '';
 })(pyscript);
 (function(module) {
     function PyDict(obj) {
+        pyscript.check(obj, {});
         module.extend(this, obj);
     }
 
@@ -399,13 +397,14 @@ pyscript.prefix = '';
     });
 
     module.dict = function(kwargs) {
-        return new PyDict(kwargs);
+        return new PyDict(kwargs || {});
     };
 
 })(pyscript);
 
 (function(module) {
     function PyList(obj) {
+        pyscript.assert(obj, Array);
         this.array = obj;
     }
 

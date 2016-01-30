@@ -1,5 +1,6 @@
 (function(module) {
     function PyList(obj) {
+        pyscript.assert(obj, Array);
         this.array = obj;
     }
 

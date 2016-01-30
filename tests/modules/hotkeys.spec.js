@@ -10,10 +10,10 @@ describe('hotkeys.module', function () {
     });
 
     it('should detect key combos', function(done) {
-        console.log(pyscript.defmodule('hotkeys')._status)
         pyscript.initialize('hotkeys')
             .then(function() {
-                pyscript.hotkeys.addKey('ctrl-space', function() {
+                pyscript.hotkeys.addKey('ctrl-space', function(e) {
+                    expect(e.ctrlKey).toBeTruthy();
                     done();
                 });
                 pyscript.hotkeys.dispatchKeyEvent({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
