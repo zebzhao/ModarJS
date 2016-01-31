@@ -30,12 +30,12 @@ Start by including the file in your main HTML file.
 
 For debugging
 ```html
-<script src="dep/pyscript/pyscript.debug.js" type="text/javascript"></script>
+<script src="pyscript.debug.js" type="text/javascript"></script>
 ```
 
 For production
 ```html
-<script src="dep/pyscript/pyscript.min.js" type="text/javascript"></script>
+<script src="pyscript.min.js" type="text/javascript"></script>
 ```
 
 ## Defining modules
