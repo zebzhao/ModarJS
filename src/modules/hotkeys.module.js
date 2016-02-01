@@ -63,7 +63,7 @@ pyscript.defmodule('hotkeys')
                 self._mods[e] = event[self._modifierMap[e]];
 
             if(!self.filter.call(this,event)) return;
-
+            console.log(self._handlers, key, event);
             if (!(key in self._handlers)) return;
 
             for (var handler, i = 0; i < self._handlers[key].length; i++) {
@@ -87,7 +87,7 @@ pyscript.defmodule('hotkeys')
             for(var lastKey,i=0;i < keys.length; i++){
                 lastKey = keys[i].split('-');
                 lastKey = lastKey[lastKey.length-1];
-                lastKey = self._keyMap[lastKey] || lastKey.charCodeAt(0);
+                lastKey = self._keyMap[lastKey] || lastKey.toUpperCase().charCodeAt(0);
 
                 if (!(lastKey in self._handlers))
                     self._handlers[lastKey] = [];

@@ -17,6 +17,7 @@ describe('hotkeys.module', function () {
                     done();
                 });
                 pyscript.hotkeys.dispatchKeyEvent({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
+                pyscript.hotkeys.clearModifiers({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
             });
     });
 });

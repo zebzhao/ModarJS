@@ -83,10 +83,9 @@ pyscript.partial = function(callback) {
     }
 };
 
-pyscript.import = function(tagName, props, callback, append) {
+pyscript.import = function(tagName, props, callback) {
     var element = document.createElement(tagName);
-    if (append)
-        document.head.appendChild(element);
+    document.head.appendChild(element);
     // Async may not be effective due to ajax protocols and queueing
     element.onload = callback;
     pyscript.extend(element, props);
@@ -680,7 +679,7 @@ pyscript.defmodule('hotkeys')
         document.addEventListener('keyup', self.clearModifiers);
     })
     .def({
-        clearModifiers: function(event){
+        clearModifiers: function(self, event){
             var key = event.keyCode,
                 i = self._downKeys.indexOf(key);
 
@@ -704,7 +703,7 @@ pyscript.defmodule('hotkeys')
                 self._mods[e] = event[self._modifierMap[e]];
 
             if(!self.filter.call(this,event)) return;
-
+            console.log(self._handlers, key, event);
             if (!(key in self._handlers)) return;
 
             for (var handler, i = 0; i < self._handlers[key].length; i++) {
