@@ -5,7 +5,8 @@ describe('hotkeys.module', function () {
                 pyscript.hotkeys.addKey('s', function() {
                     done();
                 });
-                pyscript.hotkeys.dispatchKeyEvent({keyCode: 's'.charCodeAt(0), target: {tagName: ''}});
+                pyscript.hotkeys.dispatchKeyEvent({keyCode: 'S'.charCodeAt(0), target: {tagName: ''}});
+                pyscript.hotkeys.clearModifiers({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
             });
     });
 
@@ -17,6 +18,7 @@ describe('hotkeys.module', function () {
                     done();
                 });
                 pyscript.hotkeys.dispatchKeyEvent({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
+                pyscript.hotkeys.clearModifiers({keyCode: 32, ctrlKey: true, target: {tagName: ''}});
             });
     });
 });

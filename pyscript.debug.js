@@ -83,10 +83,9 @@ pyscript.partial = function(callback) {
     }
 };
 
-pyscript.import = function(tagName, props, callback, append) {
+pyscript.import = function(tagName, props, callback) {
     var element = document.createElement(tagName);
-    if (append)
-        document.head.appendChild(element);
+    document.head.appendChild(element);
     // Async may not be effective due to ajax protocols and queueing
     element.onload = callback;
     pyscript.extend(element, props);
@@ -663,7 +662,7 @@ pyscript.defmodule('hotkeys')
             17:'ctrlKey',
             91:'metaKey'
         };
-        self._modifier = {//修饰键
+        self._modifier = {
             '⇧': 16, shift: 16,
             '⌥': 18, alt: 18, option: 18,
             '⌃': 17, ctrl: 17, control: 17,
@@ -680,7 +679,7 @@ pyscript.defmodule('hotkeys')
         document.addEventListener('keyup', self.clearModifiers);
     })
     .def({
-        clearModifiers: function(event){
+        clearModifiers: function(self, event){
             var key = event.keyCode,
                 i = self._downKeys.indexOf(key);
 
@@ -693,7 +692,7 @@ pyscript.defmodule('hotkeys')
         },
         dispatchKeyEvent: function(self, event) {
             var key = event.keyCode;
-
+            console.log(key)
             if(self._downKeys.indexOf(key)===-1) self._downKeys.push(key);
 
             if(key === 93 || key === 224) key = 91;
@@ -707,15 +706,42 @@ pyscript.defmodule('hotkeys')
 
             if (!(key in self._handlers)) return;
 
+            var activeMods = self._mods;
+
             for (var handler, i = 0; i < self._handlers[key].length; i++) {
                 handler = self._handlers[key][i];
-                handler.method(event, handler);
+
+                var handlerMods = handler.mods;
+                var modifiersMatch = handlerMods.length > 0;
+
+                for(var y in activeMods){
+                    y = parseInt(y);
+                    if(
+                        (!activeMods[y] && handlerMods.indexOf(y) != -1) ||
+                        (activeMods[y] && handlerMods.indexOf(y) == -1)) {
+                        modifiersMatch = false;
+                        break;
+                    }
+                }
+                console.log(handlerMods, modifiersMatch)
+                if(
+                    (handlerMods.length === 0
+                    && !activeMods[16] && !activeMods[18] && !activeMods[17] && !activeMods[91])
+                    || modifiersMatch) {
+                    handler.method(event, handler);
+                }
             }
         },
         getKeys: function(self, key) {
             var keys = key.replace(/\s/g, '').split(',');
             if ((keys[keys.length - 1]) === '') keys[keys.length - 2] += ',';
             return keys;
+        },
+        getMods: function(self, key) {
+            var mods = key.slice(0, key.length - 1);
+            for (var i = 0; i < mods.length; i++)
+                mods[i] = self._modifier[mods[i].toLowerCase()];
+            return mods;
         },
         addKey: function(self, key, scope, method){
             var keys = self.getKeys(key);
@@ -725,15 +751,22 @@ pyscript.defmodule('hotkeys')
                 scope = 'all';
             }
 
-            for(var lastKey,i=0;i < keys.length; i++){
-                lastKey = keys[i].split('-');
-                lastKey = lastKey[lastKey.length-1];
-                lastKey = self._keyMap[lastKey] || lastKey.charCodeAt(0);
+            var lastKey, keyArray;
+            for(var i=0;i < keys.length; i++){
+                keyArray = keys[i].split('-');
+
+                lastKey = keyArray[keyArray.length-1];
+                lastKey = self._keyMap[lastKey] || lastKey.toUpperCase().charCodeAt(0);
+
+                var mods = [];
+                if (keyArray.length > 1){
+                    mods = self.getMods(keyArray);
+                }
 
                 if (!(lastKey in self._handlers))
                     self._handlers[lastKey] = [];
 
-                self._handlers[lastKey].push({shortcut: keys[i], scope: scope, method: method, key: keys[i]});
+                self._handlers[lastKey].push({shortcut: keys[i], scope: scope, method: method, key: keys[i], mods: mods});
             }
         },
         filter: function(self, event){
