@@ -39,7 +39,7 @@ pyscript.defmodule('hotkeys')
         document.addEventListener('keyup', self.clearModifiers);
     })
     .def({
-        clearModifiers: function(event){
+        clearModifiers: function(self, event){
             var key = event.keyCode,
                 i = self._downKeys.indexOf(key);
 
