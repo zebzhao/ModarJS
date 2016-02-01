@@ -692,7 +692,7 @@ pyscript.defmodule('hotkeys')
         },
         dispatchKeyEvent: function(self, event) {
             var key = event.keyCode;
-
+            console.log(key)
             if(self._downKeys.indexOf(key)===-1) self._downKeys.push(key);
 
             if(key === 93 || key === 224) key = 91;
@@ -723,6 +723,7 @@ pyscript.defmodule('hotkeys')
                         break;
                     }
                 }
+                console.log(handlerMods, modifiersMatch)
                 if(
                     (handlerMods.length === 0
                     && !activeMods[16] && !activeMods[18] && !activeMods[17] && !activeMods[91])
