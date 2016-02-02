@@ -23,14 +23,6 @@
             }
             return matches;
         },
-        each: function(operator) {
-            pyscript.check(operator, Function);
-            var result = [];
-            for (var i=0; i < this.array.length; i++) {
-                result[i] = operator.call(this, this.array[i]);
-            }
-            return result;
-        },
         invoke: function(operator) {
             pyscript.check(operator, Function);
             var result = [];

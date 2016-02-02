@@ -30,7 +30,7 @@ describe('lst', function () {
 
     it('should invoke', function() {
         var list = pyscript.list([1, 2, 3, 4]);
-        expect(list.each(function(a) {return a+1})).toEqual([2, 3, 4, 5]);
+        expect(list.invoke(function(a) {return a+1})).toEqual([2, 3, 4, 5]);
     });
 
     it('should find', function() {
