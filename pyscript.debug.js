@@ -426,14 +426,6 @@ pyscript.prefix = '';
             }
             return matches;
         },
-        each: function(operator) {
-            pyscript.check(operator, Function);
-            var result = [];
-            for (var i=0; i < this.array.length; i++) {
-                result[i] = operator.call(this, this.array[i]);
-            }
-            return result;
-        },
         invoke: function(operator) {
             pyscript.check(operator, Function);
             var result = [];
@@ -486,7 +478,7 @@ pyscript.prefix = '';
         replaceLastIndexOf: function(searchValue, replaceValue) {
             var n = this.string.lastIndexOf(searchValue);
             if (n >= 0) {
-                return this.string.substring(0, n) + replaceValue + this.string.substring(n + replaceValue.length);
+                return this.string.substring(0, n) + replaceValue + this.string.substring(n + searchValue.length);
             }
         },
         toCamelCase: function() {
@@ -692,7 +684,7 @@ pyscript.defmodule('hotkeys')
         },
         dispatchKeyEvent: function(self, event) {
             var key = event.keyCode;
-            console.log(key)
+
             if(self._downKeys.indexOf(key)===-1) self._downKeys.push(key);
 
             if(key === 93 || key === 224) key = 91;
@@ -723,7 +715,6 @@ pyscript.defmodule('hotkeys')
                         break;
                     }
                 }
-                console.log(handlerMods, modifiersMatch)
                 if(
                     (handlerMods.length === 0
                     && !activeMods[16] && !activeMods[18] && !activeMods[17] && !activeMods[91])
