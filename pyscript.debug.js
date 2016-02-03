@@ -478,7 +478,7 @@ pyscript.prefix = '';
         replaceLastIndexOf: function(searchValue, replaceValue) {
             var n = this.string.lastIndexOf(searchValue);
             if (n >= 0) {
-                return this.string.substring(0, n) + replaceValue + this.string.substring(n + replaceValue.length);
+                return this.string.substring(0, n) + replaceValue + this.string.substring(n + searchValue.length);
             }
         },
         toCamelCase: function() {

@@ -31,6 +31,7 @@ describe('lst', function () {
         var str = pyscript.str('great');
         expect(str.replaceLastIndexOf('gr', 'tr')).toBe('treat');
         expect(str.replaceLastIndexOf('at', 'et')).toBe('greet');
+        expect(str.replaceLastIndexOf('eat', 'ow')).toBe('grow');
     });
 
     it('should convert toCamelCase', function() {
