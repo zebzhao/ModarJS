@@ -3,6 +3,11 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.1.4
+-----------
+- fix dict get() for falsey values
+- fix cache move(), get() for falsey values
+
 Version 0.1.3
 -----------
 - `str.js`: Fix bug with replaceLastIndexOf

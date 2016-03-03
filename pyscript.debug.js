@@ -384,7 +384,7 @@ pyscript.prefix = '';
             return this.hasOwnProperty(key);
         },
         get: function(key, defaultValue) {
-            return this[key] || defaultValue;
+            return this[key] === undefined ? defaultValue : this[key];
         },
         find: function(value) {
             for (var k in this) {
@@ -520,27 +520,27 @@ pyscript.defmodule('cache')
          * Files that are uploaded from local will have their location hashed.
          * This enables the use of Spriter in offline mode using local images.
          * @param self
-         * @param url   The target API url location, also used as an id.
+         * @param key   The target id.
          * @param file  The File object that was chosen to be uploaded.
          */
-        cacheFile: function(self, url, file) {
+        cacheFile: function(self, key, file) {
             var async = pyscript.async();
             var reader = new FileReader();
             reader.onload = function(e) {
-                self._storage[url] = {localUrl: e.target.result, file: file};
+                self._storage[key] = {localKey: e.target.result, file: file};
                 async.resolve(url, e.target.result);
             };
-            reader.readAsDataURL(file.file);
+            reader.readAsDatakey(file.file);
             return async.promise;
         },
         /**
-         * Fetches a local URL if one exists in the cache. Otherwise just returns
-         * the remote url.
+         * Fetches a local key if one exists in the cache. Otherwise just returns
+         * the remote key.
          * @param self
-         * @param url   The remote url to check for.
+         * @param key   The remote key to check for.
          */
-        fetchUrl: function(self, url) {
-            return self._storage.get(url, {localUrl: url}).localUrl;
+        fetchKey: function(self, key) {
+            return self._storage.get(key, {localKey: url}).localKey;
         },
         /**
          * Uploads all offline image files to the server.
@@ -551,10 +551,10 @@ pyscript.defmodule('cache')
         /**
          * Ignore things in cache which are not files
          * @param self
-         * @param url {String}
+         * @param key {String}
          */
-        syncFile: function(self, url) {
-            var cached = self._storage.get(url);
+        syncFile: function(self, key) {
+            var cached = self._storage.get(key);
             if (cached) {
                 var file = cached.file;
                 if (file) {
@@ -563,22 +563,22 @@ pyscript.defmodule('cache')
                 }
             }
         },
-        fetch: function(self, url, parser) {
-            pyscript.check(url, String);
+        fetch: function(self, key, parser) {
+            pyscript.check(key, String);
 
             var async = pyscript.async();
 
-            if (self._storage.contains(url)) {
+            if (self._storage.contains(key)) {
                 pyscript.defer(function() {
-                    async.resolve(self._storage[url], url);
+                    async.resolve(self._storage[key], key);
                 });
             }
             else {
-                pyscript.requests.get(url)
+                pyscript.requests.get(key)
                     .then(function() {
                         if (this.http.success) {
-                            self._storage[url] = parser ? parser(this.responseText) : this.responseText;
-                            async.resolve(self._storage[url], url)
+                            self._storage[key] = parser ? parser(this.responseText) : this.responseText;
+                            async.resolve(self._storage[key], key)
                         }
                         else {
                             pykit.alert("Failed to retrieve file.", {labels: {Ok: "Ok"}});
@@ -588,26 +588,29 @@ pyscript.defmodule('cache')
             return async.promise;
         },
         /**
-         * Change the remote URL an existing local URL.
+         * Change the remote key an existing local key.
          * @param self
-         * @param sourceUrl {String}
-         * @param destUrl {String}
+         * @param sourceKey {String}
+         * @param destKey {String}
          */
-        move: function(self, sourceUrl, destUrl) {
-            pyscript.check(destUrl, String);
-            pyscript.check(sourceUrl, String);
-            if (!self._storage[sourceUrl])
-                throw new ReferenceError('Cannot find ' + sourceUrl + ' in cache!');
-            self._storage[destUrl] = self._storage[sourceUrl];
-            delete self._storage[sourceUrl];
+        move: function(self, sourceKey, destKey) {
+            pyscript.check(destKey, String);
+            pyscript.check(sourceKey, String);
+            if (!self._storage.contains(sourceKey))
+                throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
+            self._storage[destKey] = self._storage[sourceKey];
+            delete self._storage[sourceKey];
         },
         delete: function(self, url) {
             pyscript.check(url, String);
             delete self._storage[url];
         },
-        contains: function(self, url) {
-            pyscript.check(url, String);
-            return self._storage.contains(url);
+        contains: function(self, key) {
+            pyscript.check(key, String);
+            return self._storage.contains(key);
+        },
+        store: function(self, key, value) {
+            self._storage[key] = value;
         },
         find: function(self, value) {
             return self._storage.find(value);
