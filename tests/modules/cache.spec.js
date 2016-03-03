@@ -53,7 +53,7 @@ describe('cache.module', function () {
                 pyscript.cache.store("keyZ", "one");
                 pyscript.cache.fetch("keyZ", function(a) { return a + "--server-parsing" })
                     .then(function(value) {
-                        expect(value).toBe("one");
+                        expect(value.result).toBe("one");
                         done();
                     });
             });

@@ -63,7 +63,7 @@ pyscript.defmodule('cache')
 
             if (self._storage.contains(url)) {
                 pyscript.defer(function() {
-                    async.resolve({success: false, url: url, parser: parser, responseText: self.get(url)});
+                    async.resolve({success: false, url: url, parser: parser, result: self.get(url)});
                 });
             }
             else {
@@ -75,7 +75,7 @@ pyscript.defmodule('cache')
                             var responseText = this.responseText || "";
                             responseText = parser ? parser(responseText) : responseText;
                             self._storage[url] = responseText;
-                            context.responseText = responseText;
+                            context.result = responseText;
                         }
                         async.resolve(context)
                     })
