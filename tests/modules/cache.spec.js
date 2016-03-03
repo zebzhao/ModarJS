@@ -7,6 +7,8 @@ describe('cache.module', function () {
                 pyscript.cache.move("keyA", "keyB");
                 expect(pyscript.cache.get("keyA")).toBeUndefined();
                 expect(pyscript.cache.get("keyB")).toBe("");
+                pyscript.cache.move("keyB", "keyB");
+                expect(pyscript.cache.get("keyB")).toBe("");
                 done();
             });
     });

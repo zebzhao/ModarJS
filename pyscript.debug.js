@@ -577,7 +577,8 @@ pyscript.defmodule('cache')
                 pyscript.requests.get(url)
                     .then(function() {
                         if (this.http.success) {
-                            self._storage[url] = parser ? parser(this.responseText) : this.responseText;
+                            var responseText = this.responseText || "";
+                            self._storage[url] = parser ? parser(responseText) : responseText;
                             async.resolve(self._storage[url], url)
                         }
                         else {
@@ -596,8 +597,12 @@ pyscript.defmodule('cache')
         move: function(self, sourceKey, destKey) {
             pyscript.check(destKey, String);
             pyscript.check(sourceKey, String);
-            if (!self._storage.contains(sourceKey))
+            if (destKey == sourceKey) {
+                return;
+            }
+            if (!self._storage.contains(sourceKey)) {
                 throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
+            }
             self._storage[destKey] = self._storage[sourceKey];
             delete self._storage[sourceKey];
         },
