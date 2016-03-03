@@ -37,7 +37,7 @@
             return this.hasOwnProperty(key);
         },
         get: function(key, defaultValue) {
-            return this[key] || defaultValue;
+            return this[key] === undefined ? defaultValue : this[key];
         },
         find: function(value) {
             for (var k in this) {
