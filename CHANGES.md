@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.1.5
+-----------
+- fixed cache fetch() context object statuses
+
 Version 0.1.4
 -----------
 - fixed dict get() for falsey values
