@@ -54,6 +54,8 @@ describe('cache.module', function () {
                 pyscript.cache.fetch("keyZ", function(a) { return a + "--server-parsing" })
                     .then(function(value) {
                         expect(value.result).toBe("one");
+                        expect(value.success).toBe(true);
+                        expect(value.cached).toBe(true);
                         done();
                     });
             });
