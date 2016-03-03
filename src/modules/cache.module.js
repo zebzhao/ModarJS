@@ -23,7 +23,7 @@ pyscript.defmodule('cache')
                 self._storage[url] = {localUrl: e.target.result, file: file};
                 async.resolve(url, e.target.result);
             };
-            reader.readAsDatakey(file.file);
+            reader.readAsDataURL(file.file);
             return async.promise;
         },
         /**
@@ -75,7 +75,7 @@ pyscript.defmodule('cache')
                             async.resolve(self._storage[url], url)
                         }
                         else {
-                            pykit.alert("Failed to retrieve file.", {labels: {Ok: "Ok"}});
+                            async.resolve();  // Failure
                         }
                     })
             }
