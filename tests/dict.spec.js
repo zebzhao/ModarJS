@@ -13,6 +13,14 @@ describe('dict', function () {
         expect(dict.contains('a')).toBeFalsy();
     });
 
+    it('should get even if falsey', function() {
+        var dict = pyscript.dict({a: false, b: null, c: ""});
+        expect(dict.get('a', 500)).toBe(false);
+        expect(dict.get('b')).toBe(null);
+        expect(dict.get('c')).toBe("");
+        expect(dict.get('d', 100)).toBe(100);
+    });
+
     it('should find a', function() {
         var dict = pyscript.dict({a: 1, b: 2});
         expect(dict.find(1)).toBe('a');
