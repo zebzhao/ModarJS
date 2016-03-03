@@ -5,9 +5,10 @@ Here you can see the full list of changes between each PyScript release.
 
 Version 0.1.4
 -----------
-- fix dict get() for falsey values
-- fix cache move(), get() for falsey values
+- fixed dict get() for falsey values
+- fixed cache move(), get() for falsey values
 - fixed cache move() from/to same key
+- cached cache fetch() promised values to context object
 
 Version 0.1.3
 -----------

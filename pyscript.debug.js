@@ -570,20 +570,21 @@ pyscript.defmodule('cache')
 
             if (self._storage.contains(url)) {
                 pyscript.defer(function() {
-                    async.resolve(self._storage[url], url);
+                    async.resolve({success: false, url: url, parser: parser, responseText: self.get(url)});
                 });
             }
             else {
                 pyscript.requests.get(url)
                     .then(function() {
+                        var context = {success: false, url: url, parser: parser};
+
                         if (this.http.success) {
                             var responseText = this.responseText || "";
-                            self._storage[url] = parser ? parser(responseText) : responseText;
-                            async.resolve(self._storage[url], url)
+                            responseText = parser ? parser(responseText) : responseText;
+                            self._storage[url] = responseText;
+                            context.responseText = responseText;
                         }
-                        else {
-                            async.resolve();  // Failure
-                        }
+                        async.resolve(context)
                     })
             }
             return async.promise;
