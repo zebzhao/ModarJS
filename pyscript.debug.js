@@ -520,27 +520,27 @@ pyscript.defmodule('cache')
          * Files that are uploaded from local will have their location hashed.
          * This enables the use of Spriter in offline mode using local images.
          * @param self
-         * @param key   The target id.
+         * @param url   The target id.
          * @param file  The File object that was chosen to be uploaded.
          */
-        cacheFile: function(self, key, file) {
+        cacheFile: function(self, url, file) {
             var async = pyscript.async();
             var reader = new FileReader();
             reader.onload = function(e) {
-                self._storage[key] = {localKey: e.target.result, file: file};
+                self._storage[url] = {localUrl: e.target.result, file: file};
                 async.resolve(url, e.target.result);
             };
             reader.readAsDatakey(file.file);
             return async.promise;
         },
         /**
-         * Fetches a local key if one exists in the cache. Otherwise just returns
-         * the remote key.
+         * Fetches a local url if one exists in the cache. Otherwise just returns
+         * the remote url.
          * @param self
-         * @param key   The remote key to check for.
+         * @param url   The remote url to check for.
          */
-        fetchKey: function(self, key) {
-            return self._storage.get(key, {localKey: url}).localKey;
+        fetchUrl: function(self, url) {
+            return self._storage.get(url, {localUrl: url}).localUrl;
         },
         /**
          * Uploads all offline image files to the server.
@@ -551,10 +551,10 @@ pyscript.defmodule('cache')
         /**
          * Ignore things in cache which are not files
          * @param self
-         * @param key {String}
+         * @param url {String}
          */
-        syncFile: function(self, key) {
-            var cached = self._storage.get(key);
+        syncFile: function(self, url) {
+            var cached = self._storage.get(url);
             if (cached) {
                 var file = cached.file;
                 if (file) {
@@ -563,22 +563,22 @@ pyscript.defmodule('cache')
                 }
             }
         },
-        fetch: function(self, key, parser) {
-            pyscript.check(key, String);
+        fetch: function(self, url, parser) {
+            pyscript.check(url, String);
 
             var async = pyscript.async();
 
-            if (self._storage.contains(key)) {
+            if (self._storage.contains(url)) {
                 pyscript.defer(function() {
-                    async.resolve(self._storage[key], key);
+                    async.resolve(self._storage[url], url);
                 });
             }
             else {
-                pyscript.requests.get(key)
+                pyscript.requests.get(url)
                     .then(function() {
                         if (this.http.success) {
-                            self._storage[key] = parser ? parser(this.responseText) : this.responseText;
-                            async.resolve(self._storage[key], key)
+                            self._storage[url] = parser ? parser(this.responseText) : this.responseText;
+                            async.resolve(self._storage[url], url)
                         }
                         else {
                             pykit.alert("Failed to retrieve file.", {labels: {Ok: "Ok"}});
@@ -588,7 +588,7 @@ pyscript.defmodule('cache')
             return async.promise;
         },
         /**
-         * Change the remote key an existing local key.
+         * Change the key of existing local key.
          * @param self
          * @param sourceKey {String}
          * @param destKey {String}
