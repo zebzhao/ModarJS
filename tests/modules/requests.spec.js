@@ -23,4 +23,19 @@ describe('requests.module', function () {
         expect(requests.put).toHaveBeenCalledWith(testUrl, {}, {});
         expect(requests.upload).toHaveBeenCalledWith(testUrl, {});
     });
+
+
+    it('should process and return response from server', function(done) {
+        var requests = pyscript.requests;
+        var testUrl = "nice";
+        requests.mockSetup();
+        requests.mockServer.defRoute('get', testUrl, function() {
+            return {responseText: "nice-response"};
+        });
+
+        requests.get(testUrl).then(function() {
+            expect(this.responseText).toBe("nice-response");
+            done();
+        });
+    });
 });
