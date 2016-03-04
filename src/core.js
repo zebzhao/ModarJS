@@ -83,27 +83,26 @@ pyscript.partial = function(callback) {
     }
 };
 
-pyscript.mockDependencies = function(mapping) {
-    pyscript.assert(jasmine, "mockDependencies() must be called from Jasmine testing.");
-    spyOn(pyscript, '_getURL').and.callFake(function(url) {
-        if (mapping[url]) {
-            console.log("%c" + url + " overridden by " + mapping[url], "color:DodgerBlue;");
-            return mapping[url];
-        }
-        else if (url.indexOf("://") != -1) {
-            return url;
-        }
-        else {
-            return pyscript.prefix + url;
-        }
-    });
-};
+(function() {
+    pyscript.mockDependencies = function(mapping) {
+        pyscript.assert(jasmine, "mockDependencies() must be called from Jasmine testing.");
+        spyOn(pyscript, '_getURL').and.callFake(function(url) {
+            if (mapping[url]) {
+                console.log("%c" + url + " overridden by " + mapping[url], "color:DodgerBlue;");
+                return getURL(mapping[url]);
+            }
+            return getURL(url);
+        });
+    };
 
-pyscript._getURL = function(url) {
-    if (url.indexOf("://"))
-        return url;
-    else return pyscript.prefix + url;
-};
+    pyscript._getURL = getURL;
+
+    function getURL(url) {
+        if (url.indexOf("://"))
+            return url;
+        else return pyscript.prefix + url;
+    }
+})();
 
 pyscript.import = function(tagName, props, callback) {
     var element = document.createElement(tagName);
