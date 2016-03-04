@@ -84,7 +84,7 @@ pyscript.defmodule('router')
             return self;
         },
         _onchange: function (self) {
-            var paths = self.proxy.getHash().slice(2).split('?')[0].split("/");
+            var paths = self.proxy.getHash().slice(1).split('?')[0].split("/");
 
             var queryParams = self.parseQuery();
             var route = "";
