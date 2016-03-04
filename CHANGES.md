@@ -3,6 +3,11 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.1
+-----------
+- added mockSetup() and proxy (for window) to router module
+- mockSetup() prevents page reload for __Jasmine 2.0__ tests
+
 Version 0.2.0
 -----------
 - added mockSetup() and mockServer for requests module

@@ -22,6 +22,7 @@ Table of Contents
 1. [Defining Module Methods](#defining-module-methods)
 1. [Special Properties](#special-properties)
 1. [Standard modules](#standard-modules)
+1. [Jasmine Testing Support](#jasmine-testing-support)
 
 Usage
 ---
@@ -251,6 +252,113 @@ pyscript.router
     });
 ```
 
+Jasmine Testing Support
+---
+PyScript officially supports Jasmine 2.0 Testing.
+
+
+### Requests
+A fake server with responses can be completely mocked out for Jasmine 2.0 unit tests.
+```javascript
+describe('mymodule', function () {
+    beforeEach(function(done) {
+        var self = this;
+        // Wait till module has loaded asynchronously
+        pyscript.initialize('mymodule').then(function(mymodule) {
+            self.mymodule = mymodule;
+            done();
+        });
+    });
+    
+    // Sets up server routes
+    beforeEach(function(done) {
+        pyscript.requests
+            .defRoute("GET", "www.example.com/myroute", function(url, params, headers, async) {
+                return {responseText: '["Raw JSON array"]', http: {success:true}};
+            })
+            .defRoute("DELETE", "www.example.com/myroute", function(url, params, headers, async) {
+                return {http: {success:true}};
+            })
+            .defRoute("POST", "www.example.com/myroute", function(url, params, payload, headers, async) {
+                return {http: {success:true}};
+            });
+    });
+    
+    it('should make server requests', function() {
+        pyscript.requests.setupMock();
+        this.mymodule.doSomething();
+    });
+});
+```
+
+### Router
+If you use Jasmine for hairy unit tests, you may often encounter this message in a large app that uses routing: `Some of your tests did a full page reload!`.
+This is undebuggable sometimes as you have no idea where it may be called, or it may even be necessary for the page to refresh.
+
+`pyscript.router` solves this problem by provindg a `setupMock()` method in Jasmine testing which allows page reloading to be handled properly.
+
+To redirect the page:
+```javascript
+// do this
+pyscript.defmodule('mymodule')
+    .initialize('router')
+    .__init__(function(self) {
+        pyscript.router.proxy.setHref("www.example.com/new/location");
+    });
+
+// instead of this
+pyscript.defmodule('mymodule')
+    .initialize('router')
+    .__init__(function(self) {
+        window.location.href = "www.example.com/new/location";
+    });
+```
+
+During tests the following will throw a proper error:
+```javascript
+// do this
+pyscript.defmodule('mymodule')
+    .initialize('router')
+    .def({
+        gotoLocation: function(self) {
+            pyscript.router.proxy.setHref("www.example.com/new/location");
+        }
+    });
+
+// instead of this
+pyscript.defmodule('mymodule')
+    .initialize('router')
+    .def({
+        gotoLocation: function(self) {
+            window.location.href = "www.example.com/new/location";
+        }
+    });
+```
+
+The refresh error can also be fully suppressed and page refreshes will be ignored:
+```javascript
+describe('mymodule', function () {
+    beforeEach(function(done) {
+        var self = this;
+        // Wait till module has loaded asynchronously
+        pyscript.initialize('mymodule').then(function(mymodule) {
+            self.mymodule = mymodule;
+            done();
+        });
+    });
+    
+    it('should not throw page reload error', function() {
+        pyscript.router.setupMock();
+        this.mymodule.gotoLocation();  // No error is thrown!
+    });
+    
+    it('should throw error with stack trace', function() {
+        pyscript.router.setupMock(true);
+        this.mymodule.gotoLocation();  // Error is thrown on page refresh!
+    });
+});
+```
+
 Developers
 ---
 First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build PyScript. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
@@ -284,6 +392,7 @@ The built version of PyScript will be put in the same folder as ```pyscript.min.
 ## Tests
 
 All tests are contained in the `tests` folder. Tests can be run using `npm test`.
+This library aims for test 80%+ coverage. Since some functions cannot be tested such as Ajax methods, 100% coverage is not possible.
 
 ## Contributing
 
