@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.0
+-----------
+- added mockSetup() and mockServer for requests module
+
 Version 0.1.5
 -----------
 - fixed cache fetch() context object statuses
