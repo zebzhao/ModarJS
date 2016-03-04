@@ -74,7 +74,6 @@ describe('cache.module', function () {
         });
 
         it('should fetch values from server', function(done) {
-            pyscript.cache.flush();
             pyscript.requests.mockSetup();
 
             pyscript.requests.mockServer.defRoute("GET", "keyZ", function() {
@@ -89,6 +88,17 @@ describe('cache.module', function () {
                 });
 
             expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
+        });
+
+
+        it('should upload file when calling syncFile()', function() {
+            pyscript.requests.mockSetup();
+
+            pyscript.cache.store("keyZ", {url: "awesomeUrl", file: {file: "fileData"}});
+            pyscript.cache.syncFile("keyZ");
+
+            expect(pyscript.requests.upload).toHaveBeenCalledWith(
+                'awesomeUrl', "fileData", {file: "fileData"});
         });
     });
 });
