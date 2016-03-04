@@ -30,4 +30,26 @@ describe('router.module', function () {
         pyscript.router.query({sample: 'why', my: 'my'});
         expect(pyscript.router.proxy.getHref().split('?')[1]).toBe('sample=why&my=my');
     });
+
+    it('should should throw error upon refresh', function() {
+        pyscript.router.mockSetup(true);
+        expect(function() {
+            pyscript.router.query({sample: 'why', my: 'my'});
+        }).toThrowError();
+    });
+
+    it('should invoke promises during mock', function(done) {
+        pyscript.router.mockSetup();
+        pyscript.router.go('/route').then(function() {
+            done();
+        });
+    });
+
+    it('should invoke routes callback during mock', function(done) {
+        pyscript.router.mockSetup();
+        pyscript.router.route('/route', function() {
+            done();
+        });
+        pyscript.router.go('/route');
+    });
 });
