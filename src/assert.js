@@ -24,6 +24,10 @@
                 module.assert(module.isBoolean(obj),
                     'expected Boolean got ' + Object.prototype.toString.call(obj), obj);
             }
+            else if (schema == Number) {
+                module.assert(module.isNumber(obj),
+                    'expected Number got ' + Object.prototype.toString.call(obj), obj);
+            }
             else if (schema == Function) {
                 module.assert(module.isFunction(obj),
                     'expected Function got ' + Object.prototype.toString.call(obj), obj);

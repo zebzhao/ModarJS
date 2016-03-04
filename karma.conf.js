@@ -7,7 +7,7 @@ module.exports = function(config){
 
         files : [
             'pyscript.debug.js',
-            '**/*.spec.js'
+            {pattern: '**/*.spec.js', watched: false, included: true, served: true}
         ],
 
         exclude : [

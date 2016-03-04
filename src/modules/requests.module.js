@@ -4,9 +4,44 @@ pyscript.defmodule('requests')
         self.interceptors = [];
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
+        self.mockServer = {
+            routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
+            request: function(method, url, params, headers, sync) {
+                var async = pyscript.async();
+                pyscript.defer(function() {
+                    var handler = self.mockServer.routes[method][url];
+                    pyscript.check(handler, Function);
+                    async.bind(handler.call(null, url, params, headers, sync)).resolve();
+                });
+                return async.promise;
+            },
+            defRoute: function(method, url, callback) {
+                pyscript.check(method, String);
+                pyscript.check(callback, Function);
+                method = method.toUpperCase();
+                pyscript.assert(self.mockServer.routes[method], "method must be GET/POST/PATCH/PUT/DELETE.")
+                self.mockServer.routes[method][url] = callback;
+                return self.mockServer;
+            }
+        };
     })
 
     .def({
+        mockSetup: function(self) {
+            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
+            self.get = jasmine.createSpy().and.callFake(
+                pyscript.partial('GET', self.mockServer.request));
+            self.put = jasmine.createSpy().and.callFake(
+                pyscript.partial('PUT', self.mockServer.request));
+            self.del = jasmine.createSpy().and.callFake(
+                pyscript.partial('DELETE', self.mockServer.request));
+            self.patch = jasmine.createSpy().and.callFake(
+                pyscript.partial('PATCH', self.mockServer.request));
+            self.post = jasmine.createSpy().and.callFake(
+                pyscript.partial('POST', self.mockServer.request));
+            self.upload = jasmine.createSpy().and.callFake(
+                pyscript.partial('UPLOAD', self.mockServer.request));
+        },
         get: function(self, url, headers, sync) {
             return self._send('GET', url, null, headers, sync);
         },

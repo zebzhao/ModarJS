@@ -22,6 +22,32 @@ describe('assert', function () {
         }).toThrowError();
     });
 
+
+    it('check number', function() {
+        pyscript.check(0, Number);
+        pyscript.check(-1, Number);
+        pyscript.check(1.23, Number);
+        expect(function() {
+            pyscript.check(false, Number);
+        }).toThrowError();
+    });
+
+
+    it('check boolean', function() {
+        pyscript.check(false, Boolean);
+        pyscript.check(true, Boolean);
+        expect(function() {
+            pyscript.check(undefined, Boolean);
+        }).toThrowError();
+    });
+
+
+    it('check defined', function() {
+        pyscript.check(false, pyscript.isDefined);
+        pyscript.check(null, pyscript.isDefined);
+    });
+
+
     it('assert', function() {
         expect(function() {
             pyscript.assert(false)
