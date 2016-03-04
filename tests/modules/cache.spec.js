@@ -6,6 +6,11 @@ describe('cache.module', function () {
     });
 
 
+    afterEach(function() {
+        pyscript.cache.flush();
+    });
+
+
     it('should move cached keys to another key', function() {
         pyscript.cache.store("keyA", "");
         expect(pyscript.cache.get("keyA")).toBe("");
@@ -16,6 +21,13 @@ describe('cache.module', function () {
         expect(pyscript.cache.get("keyB")).toBe("");
     });
 
+
+    it('should find item by value', function() {
+        pyscript.cache.store("keyV", "valueV");
+        expect(pyscript.cache.find("valueV")).toBe("keyV");
+    });
+
+
     it('should delete cached key', function() {
         pyscript.cache.store("keyB", "test");
         expect(pyscript.cache.get("keyB")).toBe("test");
@@ -25,11 +37,13 @@ describe('cache.module', function () {
         expect(pyscript.cache.contains("keyB")).toBeFalsy();
     });
 
+
     it('should get values and keys', function() {
         pyscript.cache.store("keyZ", "one");
         expect(pyscript.cache.values()).toEqual(["one"]);
         expect(pyscript.cache.keys()).toEqual(["keyZ"]);
     });
+
 
     it('should flush all', function() {
         pyscript.cache.store("keyZ", "one");
@@ -37,6 +51,7 @@ describe('cache.module', function () {
         pyscript.cache.flush();
         expect(pyscript.cache.keys().length).toBe(0);
     });
+
 
     it('should fetch values from cache', function(done) {
         pyscript.cache.store("keyZ", "one");
@@ -49,6 +64,7 @@ describe('cache.module', function () {
                 done();
             });
     });
+
 
     describe('cache.module fetch', function() {
         beforeEach(function(done) {
