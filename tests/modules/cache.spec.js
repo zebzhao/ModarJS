@@ -50,14 +50,19 @@ describe('cache.module', function () {
             });
     });
 
-    it('should fetch values from server', function() {
-        pyscript.cache.flush();
-        pyscript.requests = {};
-        pyscript.requests.get = jasmine.createSpy(
-            "get() Request mock").and.returnValue({then: pyscript.noop});
+    describe('cache.module fetch', function() {
+        beforeEach(function(done) {
+            pyscript.initialize('requests').then(function() {
+                done();
+            });
+        });
 
-        pyscript.cache.fetch("keyZ");
+        it('should fetch values from server', function() {
+            pyscript.cache.flush();
+            pyscript.requests.mockSetup();
+            pyscript.cache.fetch("keyZ");
 
-        expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
+            expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
+        });
     });
 });

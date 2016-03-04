@@ -794,8 +794,9 @@ pyscript.defmodule('requests')
                 var async = pyscript.async();
                 pyscript.defer(function() {
                     var handler = self.mockServer.routes[method][url];
-                    pyscript.check(handler, Function);
-                    async.bind(handler.call(null, url, params, headers, sync)).resolve();
+                    if (pyscript.isFunction(handler)) {
+                        async.bind(handler.call(null, url, params, headers, sync)).resolve();
+                    }
                 });
                 return async.promise;
             },
@@ -814,17 +815,17 @@ pyscript.defmodule('requests')
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
             self.get = jasmine.createSpy().and.callFake(
-                pyscript.partial('GET', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'GET'));
             self.put = jasmine.createSpy().and.callFake(
-                pyscript.partial('PUT', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'PUT'));
             self.del = jasmine.createSpy().and.callFake(
-                pyscript.partial('DELETE', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'DELETE'));
             self.patch = jasmine.createSpy().and.callFake(
-                pyscript.partial('PATCH', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'PATCH'));
             self.post = jasmine.createSpy().and.callFake(
-                pyscript.partial('POST', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'POST'));
             self.upload = jasmine.createSpy().and.callFake(
-                pyscript.partial('UPLOAD', self.mockServer.request));
+                pyscript.partial(self.mockServer.request, 'UPLOAD'));
         },
         get: function(self, url, headers, sync) {
             return self._send('GET', url, null, headers, sync);
