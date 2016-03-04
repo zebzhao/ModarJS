@@ -293,9 +293,9 @@ describe('mymodule', function () {
 
 ### Router
 If you use Jasmine for hairy unit tests, you may often encounter this message in a large app that uses routing: `Some of your tests did a full page reload!`.
-This is undebuggable sometimes as you have no idea where it may be called, or it may even be necessary for the page to refresh.
+This is sometimes not debuggable as you have no idea where it may be called. Other times it may even be necessary for the page to refresh.
 
-`pyscript.router` solves this problem by provindg a `setupMock()` method in Jasmine testing which allows page reloading to be handled properly.
+`pyscript.router` solves this problem by providing a `setupMock()` method in Jasmine testing which allows page reloading to be handled properly.
 
 To redirect the page:
 ```javascript
@@ -314,28 +314,8 @@ pyscript.defmodule('mymodule')
     });
 ```
 
-During tests the following will throw a proper error:
-```javascript
-// do this
-pyscript.defmodule('mymodule')
-    .initialize('router')
-    .def({
-        gotoLocation: function(self) {
-            pyscript.router.proxy.setHref("www.example.com/new/location");
-        }
-    });
-
-// instead of this
-pyscript.defmodule('mymodule')
-    .initialize('router')
-    .def({
-        gotoLocation: function(self) {
-            window.location.href = "www.example.com/new/location";
-        }
-    });
-```
-
-The refresh error can also be fully suppressed and page refreshes will be ignored:
+During tests the following will throw a proper error.
+The refresh error can also be fully suppressed and page refreshes will be ignored.
 ```javascript
 describe('mymodule', function () {
     beforeEach(function(done) {
