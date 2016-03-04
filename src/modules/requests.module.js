@@ -30,17 +30,17 @@ pyscript.defmodule('requests')
     .def({
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
-            self.get = jasmine.createSpy().and.callFake(
+            spyOn(self, 'get').and.callFake(
                 pyscript.partial(self.mockServer.request, 'GET'));
-            self.put = jasmine.createSpy().and.callFake(
+            spyOn(self, 'put').and.callFake(
                 pyscript.partial(self.mockServer.request, 'PUT'));
-            self.del = jasmine.createSpy().and.callFake(
+            spyOn(self, 'del').and.callFake(
                 pyscript.partial(self.mockServer.request, 'DELETE'));
-            self.patch = jasmine.createSpy().and.callFake(
+            spyOn(self, 'patch').and.callFake(
                 pyscript.partial(self.mockServer.request, 'PATCH'));
-            self.post = jasmine.createSpy().and.callFake(
+            spyOn(self, 'post').and.callFake(
                 pyscript.partial(self.mockServer.request, 'POST'));
-            self.upload = jasmine.createSpy().and.callFake(
+            spyOn(self, 'upload').and.callFake(
                 pyscript.partial(self.mockServer.request, 'UPLOAD'));
         },
         get: function(self, url, headers, sync) {

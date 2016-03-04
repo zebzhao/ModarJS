@@ -814,17 +814,17 @@ pyscript.defmodule('requests')
     .def({
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
-            self.get = jasmine.createSpy().and.callFake(
+            spyOn(self, 'get').and.callFake(
                 pyscript.partial(self.mockServer.request, 'GET'));
-            self.put = jasmine.createSpy().and.callFake(
+            spyOn(self, 'put').and.callFake(
                 pyscript.partial(self.mockServer.request, 'PUT'));
-            self.del = jasmine.createSpy().and.callFake(
+            spyOn(self, 'del').and.callFake(
                 pyscript.partial(self.mockServer.request, 'DELETE'));
-            self.patch = jasmine.createSpy().and.callFake(
+            spyOn(self, 'patch').and.callFake(
                 pyscript.partial(self.mockServer.request, 'PATCH'));
-            self.post = jasmine.createSpy().and.callFake(
+            spyOn(self, 'post').and.callFake(
                 pyscript.partial(self.mockServer.request, 'POST'));
-            self.upload = jasmine.createSpy().and.callFake(
+            spyOn(self, 'upload').and.callFake(
                 pyscript.partial(self.mockServer.request, 'UPLOAD'));
         },
         get: function(self, url, headers, sync) {
@@ -939,12 +939,60 @@ pyscript.defmodule('router')
         self._params = {};
         self._promises = [];
 
+        self.windowProxy = {
+            setHash: function(hash) {
+                window.location.hash = hash;
+            },
+            setHref: function(href) {
+                window.location.href = href;
+            },
+            setPathname: function(path) {
+                window.location.pathname = path;
+            },
+            getHash: function() {
+                return window.location.hash;
+            },
+            getHref: function() {
+                return window.location.href;
+            },
+            getPathname: function() {
+                return window.location.pathname;
+            }
+        };
+
         window.addEventListener("hashchange", function() {
             self._onchange.call(self);
         });
     })
 
     .def({
+        mockSetup: function(self) {
+            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
+
+            spyOn(self.windowProxy, 'setHash').and.callFake(function(value) {
+                self.windowProxy._hash = value;
+            });
+
+            spyOn(self.windowProxy, 'getHash').and.callFake(function() {
+                return self.windowProxy._hash || window.location.hash;
+            });
+
+            spyOn(self.windowProxy, 'setHref').and.callFake(function(value) {
+                self.windowProxy._href = value;
+            });
+
+            spyOn(self.windowProxy, 'getHref').and.callFake(function() {
+                return self.windowProxy._href || window.location.href;
+            });
+
+            spyOn(self.windowProxy, 'setPathname').and.callFake(function(value) {
+                self.windowProxy._pathname = value;
+            });
+
+            spyOn(self.windowProxy, 'getPathname').and.callFake(function() {
+                return self.windowProxy._pathname || window.location.pathanem;
+            });
+        },
         refresh: function() {
             pyscript.defer(function() {
                 var event = document.createEvent('Event');
@@ -962,7 +1010,7 @@ pyscript.defmodule('router')
             return self;
         },
         _onchange: function (self) {
-            var paths = window.location.hash.slice(2).split('?')[0].split("/");
+            var paths = self.windowProxy.getHash().slice(2).split('?')[0].split("/");
 
             var queryParams = self.parseQuery();
             var route = "";
@@ -984,8 +1032,8 @@ pyscript.defmodule('router')
             // Clear resolved promises
             self._promises = [];
         },
-        parseQuery: function() {
-            var hash = window.location.hash;
+        parseQuery: function(self) {
+            var hash = self.windowProxy.getHash();
             var query = [];
             if (hash.indexOf("?")) {
                 query = hash.slice(2).split("?");
@@ -1012,7 +1060,7 @@ pyscript.defmodule('router')
             pyscript.check(uri, String);
             var async = pyscript.async();
             self._promises.push(async);
-            window.location.hash = uri + this.asQueryString(self._params);
+            self.windowProxy.setHash(uri + this.asQueryString(self._params));
 
             if (force)
                 self.refresh();
@@ -1024,10 +1072,10 @@ pyscript.defmodule('router')
             self._params = params;
             var queryParams = self.parseQuery();
             pyscript.extend(queryParams, params);
-            window.location.href = window.location.href.split("?")[0] + self.asQueryString(self._params);
+            self.windowProxy.setHref(self.windowProxy.getHref().split("?")[0] + self.asQueryString(self._params));
         },
         redirect: function(self, pathname) {
-            window.location.pathname = pathname;
+            self.windowProxy.setPathname(pathname);
         }
     });
 

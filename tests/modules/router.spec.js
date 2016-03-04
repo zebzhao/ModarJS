@@ -18,4 +18,16 @@ describe('router.module', function () {
         expect(pyscript.router.asQueryString(
             {param1: 600, not: undefined, sing: "master"})).toBe("?param1=600&sing=master");
     });
+
+
+    it('should never force page refresh during mock', function() {
+        pyscript.router.mockSetup();
+        pyscript.router.redirect('nice');
+    });
+
+    it('should never force page refresh during mock', function() {
+        pyscript.router.mockSetup();
+        pyscript.router.query({sample: 'why', my: 'my'});
+        expect(pyscript.router.windowProxy.getHref().split('?')[1]).toBe('sample=why&my=my');
+    });
 });
