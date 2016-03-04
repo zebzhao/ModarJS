@@ -93,7 +93,7 @@ pyscript.mockDependencies = function(mapping) {
 };
 
 pyscript._getURL = function(url) {
-    if (url.indexOf("://"))
+    if (url.indexOf("://") != -1)
         return url;
     else return pyscript.prefix + url;
 };
