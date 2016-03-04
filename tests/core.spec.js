@@ -49,4 +49,13 @@ describe('pyscript', function () {
         expect(pyscript.all(function(a) {return a==1}, {'1': 1, '2': 2})).toBeFalsy();
         expect(pyscript.all(function(a) {return a==1}, {'2': 1})).toBeTruthy();
     });
+
+
+    it('should mock dependencies', function() {
+        pyscript.mockDependencies({"testUrl": "newUrl"});
+        pyscript.defmodule('testmod').import('testUrl');
+        spyOn(pyscript, 'import');
+        pyscript.initialize('testmod');
+        expect(pyscript.import.calls.mostRecent().args[1]).toEqual({src: "newUrl"});
+    });
 });
