@@ -37,11 +37,12 @@ pyscript.defmodule('router')
 
             spyOn(self.proxy, 'setHash').and.callFake(function(value) {
                 self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
-                self._onchange();
+                pyscript.defer(self._onchange);
             });
 
             spyOn(self.proxy, 'getHash').and.callFake(function() {
-                return self.proxy.getHref().split('#')[1];
+                var hash = self.proxy.getHref().split('#')[1];
+                return hash ? ('#' + hash) : '';
             });
 
             spyOn(self.proxy, 'setHref').and.callFake(function(value) {
@@ -84,7 +85,7 @@ pyscript.defmodule('router')
             return self;
         },
         _onchange: function (self) {
-            var paths = self.proxy.getHash().slice(1).split('?')[0].split("/");
+            var paths = self.proxy.getHash().slice(2).split('?')[0].split("/");
 
             var queryParams = self.parseQuery();
             var route = "";
