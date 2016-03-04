@@ -28,6 +28,6 @@ describe('router.module', function () {
     it('should never force page refresh during mock', function() {
         pyscript.router.mockSetup();
         pyscript.router.query({sample: 'why', my: 'my'});
-        expect(pyscript.router.windowProxy.getHref().split('?')[1]).toBe('sample=why&my=my');
+        expect(pyscript.router.proxy.getHref().split('?')[1]).toBe('sample=why&my=my');
     });
 });

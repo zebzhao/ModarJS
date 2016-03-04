@@ -939,7 +939,7 @@ pyscript.defmodule('router')
         self._params = {};
         self._promises = [];
 
-        self.windowProxy = {
+        self.proxy = {
             setHash: function(hash) {
                 window.location.hash = hash;
             },
@@ -969,28 +969,28 @@ pyscript.defmodule('router')
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
 
-            spyOn(self.windowProxy, 'setHash').and.callFake(function(value) {
-                self.windowProxy._hash = value;
+            spyOn(self.proxy, 'setHash').and.callFake(function(value) {
+                self.proxy._hash = value;
             });
 
-            spyOn(self.windowProxy, 'getHash').and.callFake(function() {
-                return self.windowProxy._hash || window.location.hash;
+            spyOn(self.proxy, 'getHash').and.callFake(function() {
+                return self.proxy._hash || window.location.hash;
             });
 
-            spyOn(self.windowProxy, 'setHref').and.callFake(function(value) {
-                self.windowProxy._href = value;
+            spyOn(self.proxy, 'setHref').and.callFake(function(value) {
+                self.proxy._href = value;
             });
 
-            spyOn(self.windowProxy, 'getHref').and.callFake(function() {
-                return self.windowProxy._href || window.location.href;
+            spyOn(self.proxy, 'getHref').and.callFake(function() {
+                return self.proxy._href || window.location.href;
             });
 
-            spyOn(self.windowProxy, 'setPathname').and.callFake(function(value) {
-                self.windowProxy._pathname = value;
+            spyOn(self.proxy, 'setPathname').and.callFake(function(value) {
+                self.proxy._pathname = value;
             });
 
-            spyOn(self.windowProxy, 'getPathname').and.callFake(function() {
-                return self.windowProxy._pathname || window.location.pathanem;
+            spyOn(self.proxy, 'getPathname').and.callFake(function() {
+                return self.proxy._pathname || window.location.pathanem;
             });
         },
         refresh: function() {
@@ -1010,7 +1010,7 @@ pyscript.defmodule('router')
             return self;
         },
         _onchange: function (self) {
-            var paths = self.windowProxy.getHash().slice(2).split('?')[0].split("/");
+            var paths = self.proxy.getHash().slice(2).split('?')[0].split("/");
 
             var queryParams = self.parseQuery();
             var route = "";
@@ -1033,7 +1033,7 @@ pyscript.defmodule('router')
             self._promises = [];
         },
         parseQuery: function(self) {
-            var hash = self.windowProxy.getHash();
+            var hash = self.proxy.getHash();
             var query = [];
             if (hash.indexOf("?")) {
                 query = hash.slice(2).split("?");
@@ -1060,7 +1060,7 @@ pyscript.defmodule('router')
             pyscript.check(uri, String);
             var async = pyscript.async();
             self._promises.push(async);
-            self.windowProxy.setHash(uri + this.asQueryString(self._params));
+            self.proxy.setHash(uri + this.asQueryString(self._params));
 
             if (force)
                 self.refresh();
@@ -1072,10 +1072,10 @@ pyscript.defmodule('router')
             self._params = params;
             var queryParams = self.parseQuery();
             pyscript.extend(queryParams, params);
-            self.windowProxy.setHref(self.windowProxy.getHref().split("?")[0] + self.asQueryString(self._params));
+            self.proxy.setHref(self.proxy.getHref().split("?")[0] + self.asQueryString(self._params));
         },
         redirect: function(self, pathname) {
-            self.windowProxy.setPathname(pathname);
+            self.proxy.setPathname(pathname);
         }
     });
 
