@@ -73,10 +73,20 @@ describe('cache.module', function () {
             });
         });
 
-        it('should fetch values from server', function() {
+        it('should fetch values from server', function(done) {
             pyscript.cache.flush();
             pyscript.requests.mockSetup();
-            pyscript.cache.fetch("keyZ");
+
+            pyscript.requests.mockServer.defRoute("GET", "keyZ", function() {
+                return {responseText: "Awesome", http: {success: true}};
+            });
+
+            pyscript.cache.fetch("keyZ",
+                function(value) { return value + ":Parsed"; })
+                .then(function(context) {
+                    expect(context.result).toBe("Awesome:Parsed");
+                    done();
+                });
 
             expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
         });
