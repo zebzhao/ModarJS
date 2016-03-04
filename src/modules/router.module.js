@@ -32,18 +32,21 @@ pyscript.defmodule('router')
     })
 
     .def({
-        mockSetup: function(self) {
+        mockSetup: function(self, throwErrorOnRefresh) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
 
             spyOn(self.proxy, 'setHash').and.callFake(function(value) {
-                self.proxy._hash = value;
+                self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
+                self._onchange();
             });
 
             spyOn(self.proxy, 'getHash').and.callFake(function() {
-                return self.proxy._hash || window.location.hash;
+                return self.proxy.getHref().split('#')[1];
             });
 
             spyOn(self.proxy, 'setHref').and.callFake(function(value) {
+                if (throwErrorOnRefresh)
+                    throw new Error('Page refresh detected. Redirection to: ' + value);
                 self.proxy._href = value;
             });
 
@@ -52,11 +55,16 @@ pyscript.defmodule('router')
             });
 
             spyOn(self.proxy, 'setPathname').and.callFake(function(value) {
-                self.proxy._pathname = value;
+                if (throwErrorOnRefresh)
+                    throw new Error('Page refresh detected. Redirection to: ' + value);
+                self.proxy.setHref(self.proxy.getHref().replace(self.proxy.getPathname(), value));
             });
 
             spyOn(self.proxy, 'getPathname').and.callFake(function() {
-                return self.proxy._pathname || window.location.pathanem;
+                var href = self.proxy.getHref();
+                var pathname = href.replace('://', '').split('/', 1)[1] || "";
+                pathname = pathname.split('?')[0].split('#')[0];
+                return pathname;
             });
         },
         refresh: function() {
@@ -126,6 +134,7 @@ pyscript.defmodule('router')
             pyscript.check(uri, String);
             var async = pyscript.async();
             self._promises.push(async);
+
             self.proxy.setHash(uri + this.asQueryString(self._params));
 
             if (force)
