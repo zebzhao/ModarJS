@@ -86,9 +86,16 @@ pyscript.partial = function(callback) {
 pyscript.mockDependencies = function(mapping) {
     pyscript.assert(jasmine, "mockDependencies() must be called from Jasmine testing.");
     spyOn(pyscript, '_getURL').and.callFake(function(url) {
-        if (mapping[url])
+        if (mapping[url]) {
             console.log("%c" + url + " overridden by " + mapping[url], "color:DodgerBlue;");
-        return mapping[url] || url;
+            return mapping[url];
+        }
+        else if (url.indexOf("://") != -1) {
+            return url;
+        }
+        else {
+            return pyscript.prefix + url;
+        }
     });
 };
 
