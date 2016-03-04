@@ -52,9 +52,9 @@ describe('pyscript', function () {
 
 
     it('should mock dependencies', function() {
+        spyOn(pyscript, 'import');
         pyscript.mockDependencies({"testUrl": "newUrl"});
         pyscript.defmodule('testmod').import('testUrl');
-        spyOn(pyscript, 'import');
         pyscript.initialize('testmod');
         expect(pyscript.import.calls.mostRecent().args[1]).toEqual({src: "newUrl"});
     });
