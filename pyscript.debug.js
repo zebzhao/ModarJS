@@ -98,7 +98,7 @@ pyscript.partial = function(callback) {
     pyscript._getURL = getURL;
 
     function getURL(url) {
-        if (url.indexOf("://"))
+        if (url.indexOf("://") != -1)
             return url;
         else return pyscript.prefix + url;
     }
