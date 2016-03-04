@@ -5,6 +5,7 @@ describe('dict', function () {
         expect(dict.values()).toEqual([1, 2]);
     });
 
+
     it('should contain and clear', function() {
         var dict = pyscript.dict({a: 1, b: 2});
         expect(dict.contains('a')).toBeTruthy();
@@ -12,6 +13,7 @@ describe('dict', function () {
         dict.clear();
         expect(dict.contains('a')).toBeFalsy();
     });
+
 
     it('should get even if falsey', function() {
         var dict = pyscript.dict({a: false, b: null, c: ""});
@@ -21,10 +23,12 @@ describe('dict', function () {
         expect(dict.get('d', 100)).toBe(100);
     });
 
+
     it('should find a', function() {
         var dict = pyscript.dict({a: 1, b: 2});
         expect(dict.find(1)).toBe('a');
     });
+
 
     it('should extend dict', function() {
         var dict = pyscript.dict({a: 1, b: 2});

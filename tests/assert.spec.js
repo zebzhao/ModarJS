@@ -6,12 +6,14 @@ describe('assert', function () {
         }).toThrowError();
     });
 
+
     it('check array', function() {
         pyscript.check([], Array);
         expect(function() {
             pyscript.check('', Array)
         }).toThrowError();
     });
+
 
     it('check obj', function() {
         pyscript.check({a: ''}, {a: String});

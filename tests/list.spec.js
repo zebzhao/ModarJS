@@ -4,16 +4,19 @@ describe('lst', function () {
         expect(list.array).toEqual([1, 2, 3]);
     });
 
+
     it('should append', function() {
         var list = pyscript.list([1, 2, 3]);
         list.append(4);
         expect(list.array).toEqual([1, 2, 3, 4]);
     });
 
+
     it('should return unique', function() {
         var list = pyscript.list([1, 2, 3, 2, 3, 4, 1]);
         expect(list.unique().length).toEqual(4);
     });
+
 
     it('should remove', function() {
         var list = pyscript.list([1, 2, 3, 4]);
@@ -22,16 +25,19 @@ describe('lst', function () {
         expect(list.array).toEqual([1, 2, 3]);
     });
 
+
     it('should get first and last', function() {
         var list = pyscript.list([1, 2, 3, 4]);
         expect(list.first()).toBe(1);
         expect(list.last()).toBe(4);
     });
 
+
     it('should invoke', function() {
         var list = pyscript.list([1, 2, 3, 4]);
         expect(list.invoke(function(a) {return a+1})).toEqual([2, 3, 4, 5]);
     });
+
 
     it('should find', function() {
         var list = pyscript.list([{'a': 1}, {'v': 2}, {'a': 2}, {'a': 2}]);
