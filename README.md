@@ -257,6 +257,32 @@ Jasmine Testing Support
 PyScript officially supports Jasmine 2.0 Testing.
 
 
+### Dependencies
+Sometimes you want to use CDNs, but this introduces problems when testing locally on a headless browser.
+PyScript solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
+
+Here's an example of how this works:
+```javascript
+pyscript.prefix = '/home/user/project';  // Tells the headless browser to local path
+pyscript.prefix = 'C://path/to/project/folder';  // For Windows
+
+describe('mymodule', function () {
+    beforeEach(function(done) {
+        var self = this;
+        
+        // This will replace any scripts loading www.example.com/external.js with /home/user/project/lib/external.js
+        pyscript.mockDependencies({
+            "www.example.com/external.js": "lib/external.js"
+        });
+        
+        // Wait till module has loaded asynchronously
+        pyscript.initialize('mymodule').then(function(mymodule) {
+            self.mymodule = mymodule;
+            done();
+        });
+    });
+```
+
 ### Requests
 A fake server with responses can be completely mocked out for Jasmine 2.0 unit tests.
 ```javascript
@@ -285,7 +311,7 @@ describe('mymodule', function () {
     });
     
     it('should make server requests', function() {
-        pyscript.requests.setupMock();
+        pyscript.requests.mockSetup();
         this.mymodule.doSomething();
     });
 });
@@ -295,7 +321,7 @@ describe('mymodule', function () {
 If you use Jasmine for hairy unit tests, you may often encounter this message in a large app that uses routing: `Some of your tests did a full page reload!`.
 This is sometimes not debuggable as you have no idea where it may be called. Other times it may even be necessary for the page to refresh.
 
-`pyscript.router` solves this problem by providing a `setupMock()` method in Jasmine testing which allows page reloading to be handled properly.
+`pyscript.router` solves this problem by providing a `mockSetup()` method in Jasmine testing which allows page reloading to be handled properly.
 
 To redirect the page:
 ```javascript
@@ -328,12 +354,12 @@ describe('mymodule', function () {
     });
     
     it('should not throw page reload error', function() {
-        pyscript.router.setupMock();
+        pyscript.router.mockSetup();
         this.mymodule.gotoLocation();  // No error is thrown!
     });
     
     it('should throw error with stack trace', function() {
-        pyscript.router.setupMock(true);
+        pyscript.router.mockSetup(true);
         this.mymodule.gotoLocation();  // Error is thrown on page refresh!
     });
 });
