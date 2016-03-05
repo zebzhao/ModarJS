@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.2
+-----------
+- added option to replace external libraries with local ones for testing
+
 Version 0.2.1
 -----------
 - added mockSetup() and proxy (for window) to router module
