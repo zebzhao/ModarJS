@@ -3,6 +3,11 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.3
+-----------
+- added `beforeRequest()` to `pyscript.requests`
+- fixed: `pyscript.requests.interceptors` now also fire on network error
+
 Version 0.2.2
 -----------
 - added option to replace external libraries with local ones for testing
