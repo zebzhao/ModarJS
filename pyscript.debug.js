@@ -807,6 +807,7 @@ pyscript.defmodule('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
+        self.beforeRequest = null;
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
         self.mockServer = {
@@ -871,8 +872,8 @@ pyscript.defmodule('requests')
 
             formData.append("upload", file);
             var xhr = new XMLHttpRequest();
-            xhr.onload = onUploadSuccess;
-            xhr.onerror = onUploadError;
+            xhr.onload = handleResponse;
+            xhr.onerror = handleResponse;
             xhr.open('POST', url, !sync);
 
             if (self.headers){
@@ -883,20 +884,19 @@ pyscript.defmodule('requests')
                 }
             }
 
+            if (pyscript.isFunction(self.beforeRequest)) {
+                self.beforeRequest.call(null, xhr);
+            }
             xhr.send(formData);
 
             return async.promise;
 
-            function onUploadSuccess() {
+            function handleResponse() {
                 var exit;
                 for (var i=0; i<self.interceptors.length; i++) {
                     exit = self.interceptors[i].call(this);
                     if (exit) return;
                 }
-                self._parseStatus(this);
-                async.bind(this).resolve.apply(async);
-            }
-            function onUploadError() {
                 self._parseStatus(this);
                 async.bind(this).resolve.apply(async);
             }
@@ -911,7 +911,21 @@ pyscript.defmodule('requests')
             if (self.headers) pyscript.extend(headers, self.headers);
             params = JSON.stringify(params);
             var xhr = new XMLHttpRequest();
-            xhr.onload = function() {
+            xhr.onload = handleResponse;
+            xhr.onerror = handleResponse;
+            xhr.open(method, url, !sync);
+            for (var key in headers)
+                if (headers.hasOwnProperty(key))
+                    xhr.setRequestHeader(key, headers[key]);
+
+            if (pyscript.isFunction(self.beforeRequest)) {
+                self.beforeRequest.call(null, xhr);
+            }
+            xhr.send(params);
+
+            return sync ? xhr : async.promise;
+
+            function handleResponse() {
                 var exit;
                 for (var i=0; i<self.interceptors.length; i++) {
                     exit = self.interceptors[i].call(this);
@@ -919,18 +933,7 @@ pyscript.defmodule('requests')
                 }
                 self._parseStatus(this);
                 async.bind(this).resolve();
-            };
-            xhr.onerror = function() {
-                self._parseStatus(this);
-                async.bind(this).resolve();
-            };
-            xhr.open(method, url, !sync);
-            for (var key in headers)
-                if (headers.hasOwnProperty(key))
-                    xhr.setRequestHeader(key, headers[key]);
-            xhr.send(params);
-
-            return sync ? xhr : async.promise;
+            }
         },
         _parseStatus: function(self, thisArg) {
             var status = thisArg.status;
@@ -938,6 +941,7 @@ pyscript.defmodule('requests')
                 success: status >= 200 && status < 400,
                 redirect: status >=300 && status < 400,
                 error: status >= 400,
+                unavailable: status == 503,
                 serverError: status >= 500,
                 clientError: status >= 400 && status < 500,
                 conflict: status == 409,
