@@ -132,8 +132,11 @@ pyscript.module = function(name) {
 };
 
 pyscript.defmodule = function (name) {
-    var instance = {__name__: name, __initialized__: false};
-    pyscript.modules[name] = instance;
+    var instance = pyscript.module(name);
+    if (!instance) {
+        instance = {__name__: name, __initialized__: false};
+        pyscript.modules[name] = instance;
+    }
     var all_modules = window._py_all_modules = window._py_all_modules || {};
     var cached_files = window._py_cached_files = window._py_cached_files || pyscript.dict();
 
