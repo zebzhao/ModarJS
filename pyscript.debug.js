@@ -1029,6 +1029,10 @@ pyscript.defmodule('router')
                 pathname = pathname.split('?')[0].split('#')[0];
                 return pathname;
             });
+
+            spyOn(self, 'refresh').and.callFake(function() {
+                self._onchange();
+            });
         },
         refresh: function() {
             pyscript.defer(function() {
