@@ -1029,17 +1029,9 @@ pyscript.defmodule('router')
                 pathname = pathname.split('?')[0].split('#')[0];
                 return pathname;
             });
-
-            spyOn(self, 'refresh').and.callFake(function() {
-                self._onchange();
-            });
         },
-        refresh: function() {
-            pyscript.defer(function() {
-                var event = document.createEvent('Event');
-                event.initEvent('hashchange', true, true);
-                window.dispatchEvent(event);
-            });
+        refresh: function(self) {
+            self._onchange();
         },
         route: function(self, urls, callback) {
             urls = pyscript.isString(urls) ? [urls] : urls;
