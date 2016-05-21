@@ -1,10 +1,6 @@
 pyscript.defmodule('router')
 
-    .__init__(function(self) {
-        self._routes = {};
-        self._params = {};
-        self._promises = [];
-
+    .__new__(function(self) {
         self.proxy = {
             setHash: function(hash) {
                 window.location.hash = hash;
@@ -29,6 +25,12 @@ pyscript.defmodule('router')
         window.addEventListener("hashchange", function() {
             self._onchange.call(self);
         });
+    })
+
+    .__init__(function(self) {
+        self._routes = {};
+        self._params = {};
+        self._promises = [];
     })
 
     .def({
