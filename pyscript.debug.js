@@ -516,6 +516,10 @@ pyscript.prefix = '';
             });
         },
         sprintf: function(obj) {
+            console.warn('sprintf is deprecated, please use format instead');
+            this.format(obj);
+        },
+        format: function(obj) {
             var str = this.string;
             for (var name in obj) {
                 if (obj.hasOwnProperty(name)) {
@@ -818,7 +822,7 @@ pyscript.defmodule('requests')
     .def({
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
-            
+
             self.mockServer = {
                 routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
                 request: function(method, url, params, headers, sync) {

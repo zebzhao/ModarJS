@@ -47,8 +47,8 @@ describe('lst', function () {
     });
 
 
-    it('should format with sprintf', function() {
+    it('should format', function() {
         var str = pyscript.str('great {man}, {slayer}');
-        expect(str.sprintf({man: 'bob', slayer: 'batter'})).toBe('great bob, batter');
+        expect(str.format({man: 'bob', slayer: 'batter'})).toBe('great bob, batter');
     });
 });
