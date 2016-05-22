@@ -90,7 +90,7 @@ pyscript.defmodule('router')
 
             pyscript.map(function(elem, i) {
                 route = route + "/" + elem;
-                var callbacks = self._routes[i == paths.length-1 ? route : route + "*"];
+                var callbacks = self._routes[i == paths.length-1 ? route : route + "/*"];
                 if (callbacks && callbacks.length > 0) {
                     for (var j=0; j < callbacks.length; j++) {
                         callbacks[j].call(self, queryParams);
