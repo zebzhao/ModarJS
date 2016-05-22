@@ -1039,7 +1039,9 @@ pyscript.defmodule('router')
             });
         },
         refresh: function(self) {
-            self._onchange();
+            pyscript.defer(function() {
+                self._onchange(self);
+            });
         },
         route: function(self, urls, callback) {
             urls = pyscript.isString(urls) ? [urls] : urls;
