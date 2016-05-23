@@ -3,6 +3,13 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.4
+-----------
+- deprecated: `str.sprintf` deprecated in favor of `str.format`
+- changed: `router.refresh` no longer refreshes page for compatibility with Karma
+- changed: router wildcard now requires 'route/*' instead of 'route*'
+- changed: `requests.mockSetup` and `router.mockSetup` work better with Karma
+
 Version 0.2.3
 -----------
 - added `beforeRequest()` to `pyscript.requests`

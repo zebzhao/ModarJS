@@ -5,32 +5,34 @@ pyscript.defmodule('requests')
         self.beforeRequest = null;
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
-        self.mockServer = {
-            routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
-            request: function(method, url, params, headers, sync) {
-                var async = pyscript.async();
-                pyscript.defer(function() {
-                    var handler = self.mockServer.routes[method][url];
-                    if (pyscript.isFunction(handler)) {
-                        async.bind(handler.call(null, url, params, headers, sync)).resolve();
-                    }
-                });
-                return async.promise;
-            },
-            defRoute: function(method, url, callback) {
-                pyscript.check(method, String);
-                pyscript.check(callback, Function);
-                method = method.toUpperCase();
-                pyscript.assert(self.mockServer.routes[method], "method must be GET/POST/PATCH/PUT/DELETE.")
-                self.mockServer.routes[method][url] = callback;
-                return self.mockServer;
-            }
-        };
     })
 
     .def({
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
+
+            self.mockServer = {
+                routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
+                request: function(method, url, params, headers, sync) {
+                    var async = pyscript.async();
+                    pyscript.defer(function() {
+                        var handler = self.mockServer.routes[method][url];
+                        if (pyscript.isFunction(handler)) {
+                            async.bind(handler.call(null, url, params, headers, sync)).resolve();
+                        }
+                    });
+                    return async.promise;
+                },
+                defRoute: function(method, url, callback) {
+                    pyscript.check(method, String);
+                    pyscript.check(callback, Function);
+                    method = method.toUpperCase();
+                    pyscript.assert(self.mockServer.routes[method], "method must be GET/POST/PATCH/PUT/DELETE.")
+                    self.mockServer.routes[method][url] = callback;
+                    return self.mockServer;
+                }
+            };
+
             spyOn(self, 'get').and.callFake(
                 pyscript.partial(self.mockServer.request, 'GET'));
             spyOn(self, 'put').and.callFake(
