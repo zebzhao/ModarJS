@@ -29,10 +29,6 @@
                 return index == 0 ? match.toLowerCase() : match.toUpperCase();
             });
         },
-        sprintf: function(obj) {
-            console.warn('sprintf is deprecated, please use format instead');
-            this.format(obj);
-        },
         format: function(obj) {
             var str = this.string;
             for (var name in obj) {
