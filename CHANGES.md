@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.2.5
+-----------
+- removed: `str.sprintf`, which wasn't working in previous version
+
 Version 0.2.4
 -----------
 - deprecated: `str.sprintf` deprecated in favor of `str.format`
