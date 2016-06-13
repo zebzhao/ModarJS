@@ -1031,6 +1031,15 @@ pyscript.defmodule('requests')
                 headers['Content-Type'] = 'application/json';
             }
 
+            var exit;
+            for (var interceptor,i=0; i<self.interceptors.length; i++) {
+                interceptor = self.interceptors[i];
+                if (interceptor.request) {
+                    exit = interceptor.request(data, {headers: headers, url: url, method: method});
+                    if (exit === false) return;
+                }
+            }
+
             var route = self._matchRoute(method, url);
 
             if (route) {
@@ -1054,9 +1063,12 @@ pyscript.defmodule('requests')
 
             function handleResponse() {
                 var exit;
-                for (var i=0; i<self.interceptors.length; i++) {
-                    exit = self.interceptors[i].call(this);
-                    if (exit) return;
+                for (var interceptor,i=0; i<self.interceptors.length; i++) {
+                    interceptor = self.interceptors[i];
+                    if (interceptor.response) {
+                        exit = interceptor.response.call(this);
+                        if (exit === false) return;
+                    }
                 }
                 self._parseStatus(this);
                 async.bind(this).resolve();
