@@ -25,7 +25,7 @@ pyscript.defmodule('requests')
         },
         _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
             pyscript.check(callback, Function);
-            var existing = self.routes.find('pattern', urlPattern);
+            var existing = self.routes.findOne('pattern', urlPattern);
             var update = {
                 priority: priority || 1,
                 pattern: new RegExp(urlPattern),
@@ -37,7 +37,7 @@ pyscript.defmodule('requests')
                 pyscript.extend(existing, update)
             }
             else {
-                self.routes.append(update);
+                self.routes.push(update);
             }
             return self;
         },
@@ -150,8 +150,8 @@ pyscript.defmodule('requests')
         _matchRoute: function(self, method, url) {
             var result, route;
             var priority = -1;
-            for (var i = 0; i < self.routes.array.length; i++) {
-                route = self.routes.array[i];
+            for (var i = 0; i < self.routes.length; i++) {
+                route = self.routes[i];
                 if (route.method == method && route.pattern.test(url)) {
                     if (route.priority > priority) {
                         priority = route.priority;

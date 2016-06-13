@@ -178,7 +178,7 @@ pyscript.defmodule = function (name) {
         },
 
         __init__: function(callback) {
-            self._callbacks.append(callback);
+            self._callbacks.push(callback);
             return self;
         },
         __new__: function(callback) {
@@ -193,7 +193,7 @@ pyscript.defmodule = function (name) {
                 return async.promise;
             }
             else if (self._status == "loading") {
-                self._callbacks.append(function() {
+                self._callbacks.push(function() {
                     async.resolve(instance);
                 });
                 return async.promise;
@@ -235,7 +235,7 @@ pyscript.defmodule = function (name) {
                     pyscript.defer(function() {
                         self._status = "loaded";
 
-                        self._callbacks.map(function(cb) {
+                        self._callbacks.each(function(cb) {
                             cb.call(null, instance);
                         });
 

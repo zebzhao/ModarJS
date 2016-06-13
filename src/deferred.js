@@ -5,7 +5,7 @@
         self._binding = null;
         self.promise = {
             then: function(callback) {
-                self._callbacks.append(callback);
+                self._callbacks.push(callback);
                 return self.promise;
             }
         }
@@ -19,7 +19,7 @@
         resolve: function() {
             var args = arguments;
             var self = this;
-            this._callbacks.map(function (e) {
+            this._callbacks.each(function (e) {
                 e.apply(self._binding, args);
             })
         }
