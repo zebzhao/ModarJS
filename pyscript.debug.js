@@ -1072,7 +1072,8 @@ pyscript.defmodule('requests')
                             var headers = response[2] || {};
                             return headers[name];
                         },
-                        responseText: JSON.stringify(response[1])
+                        responseText: pyscript.isString(response[1]) ?
+                            response[1] : JSON.stringify(response[1])
                     };
                     async.bind(responseObject).resolve();
                 }
