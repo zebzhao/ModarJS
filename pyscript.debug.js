@@ -920,6 +920,26 @@ pyscript.defmodule('requests')
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
         self.routes = pyscript.list();
+        self._defaultStatusText = {
+            200: 'OK',
+            201: 'Created',
+            202: 'Accepted',
+            204: 'No Content',
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            402: 'Payment Required',
+            403: 'Forbidden',
+            404: 'Not Found',
+            405: 'Method Not Allowed',
+            406: 'Not Acceptable',
+            409: 'Conflict',
+            500: 'Internal Server Error',
+            501: 'Not Implemented',
+            502: 'Bad Gateway',
+            503: 'Service Unavailable',
+            504: 'Gateway Timeout',
+            511: 'Network Authentication Required'
+        }
     })
 
     .def({
@@ -1043,7 +1063,19 @@ pyscript.defmodule('requests')
             var route = self._matchRoute(method, url);
 
             if (route) {
-                route.callback(data, {headers: headers, url: url, method: method});
+                var response = route.callback(data, {headers: headers, url: url, method: method}) || {};
+                if (!route.callThrough) {
+                    var responseObject = {
+                        status: response[0],
+                        statusText: response[3] || self._defaultStatusText[status],
+                        getResponseHeader: function(name) {
+                            var headers = response[2] || {};
+                            return headers[name];
+                        },
+                        responseText: JSON.stringify(response[1])
+                    };
+                    async.bind(responseObject).resolve();
+                }
             }
 
             if (!route || route.callThrough) {
