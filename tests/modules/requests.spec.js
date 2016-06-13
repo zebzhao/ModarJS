@@ -39,7 +39,7 @@ describe('requests.module', function () {
     });
 
     it('should invoke whenGET on match', function() {
-        var mockMethod = jasmine.createSpy('GET callback');
+        var mockMethod = jasmine.createSpy('whenGET callback');
         pyscript.requests.whenGET(/pokemon[1-9]/, mockMethod);
         pyscript.requests.get('/pokemon1');
         pyscript.requests.get('/pokemon123');  // Should also call mock.

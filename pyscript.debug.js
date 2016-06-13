@@ -841,6 +841,7 @@ pyscript.defmodule('requests')
                 callback: callback,
                 callThrough: callThrough || false
             };
+            console.log(existing)
             if (existing) {
                 pyscript.extend(existing, update)
             }
@@ -958,7 +959,7 @@ pyscript.defmodule('requests')
         _matchRoute: function(self, method, url) {
             var result, route;
             var priority = -1;
-            for (var i = 0; i < self.routes.array; i++) {
+            for (var i = 0; i < self.routes.array.length; i++) {
                 route = self.routes.array[i];
                 if (route.method == method && route.pattern.test(url)) {
                     if (route.priority > priority) {
@@ -967,7 +968,6 @@ pyscript.defmodule('requests')
                     }
                 }
             }
-            console.log(route)
             return result;
         },
         _parseStatus: function(self, thisArg) {
