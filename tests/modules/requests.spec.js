@@ -5,7 +5,6 @@ describe('requests.module', function () {
         });
     });
 
-
     it('mock all request methods', function() {
         var requests = pyscript.requests;
         var testUrl = "www.test.url.com.y";
@@ -37,5 +36,14 @@ describe('requests.module', function () {
             expect(this.responseText).toBe("nice-response");
             done();
         });
+    });
+
+    it('should invoke whenGET on match', function() {
+        var mockMethod = jasmine.createSpy('GET callback');
+        pyscript.requests.whenGET(/pokemon[1-9]/, mockMethod);
+        pyscript.requests.get('/pokemon1');
+        pyscript.requests.get('/pokemon123');  // Should also call mock.
+        pyscript.requests.get('/pokemon');
+        expect(mockMethod).toHaveBeenCalledTimes(2);
     });
 });

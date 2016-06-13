@@ -23,7 +23,7 @@
             }
             return matches;
         },
-        invoke: function(operator) {
+        map: function(operator) {
             pyscript.check(operator, Function);
             var result = [];
             for (var i=0; i < this.array.length; i++) {

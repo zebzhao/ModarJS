@@ -5,7 +5,10 @@ Here you can see the full list of changes between each PyScript release.
 
 Version 0.2.5
 -----------
+- changed: renamed `list.invoke` with `list.map`
+- fixed: `request.upload` can now specify headers
 - removed: `str.sprintf`, which wasn't working in previous version
+- removed: `request.beforeRequest`, replaced by whenGET, whenPOST, etc.
 
 Version 0.2.4
 -----------

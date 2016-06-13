@@ -235,7 +235,7 @@ pyscript.defmodule = function (name) {
                     pyscript.defer(function() {
                         self._status = "loaded";
 
-                        self._callbacks.invoke(function(cb) {
+                        self._callbacks.map(function(cb) {
                             cb.call(null, instance);
                         });
 

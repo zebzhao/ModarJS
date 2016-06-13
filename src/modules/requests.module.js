@@ -2,12 +2,45 @@ pyscript.defmodule('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
-        self.beforeRequest = null;
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
+        self.routes = pyscript.list();
     })
 
     .def({
+        whenGET: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('GET', urlPattern, callback, callThrough, priority);
+        },
+        whenPOST: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('POST', urlPattern, callback, callThrough, priority);
+        },
+        whenPATCH: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('PATCH', urlPattern, callback, callThrough, priority);
+        },
+        whenPUT: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('PUT', urlPattern, callback, callThrough, priority);
+        },
+        whenDELETE: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
+        },
+        _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
+            pyscript.check(callback, Function);
+            var existing = self.routes.find('pattern', urlPattern);
+            var update = {
+                priority: priority || 1,
+                pattern: new RegExp(urlPattern),
+                method: method,
+                callback: callback,
+                callThrough: callThrough || false
+            };
+            if (existing) {
+                pyscript.extend(existing, update)
+            }
+            else {
+                self.routes.append(update);
+            }
+            return self;
+        },
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
 
@@ -61,64 +94,46 @@ pyscript.defmodule('requests')
         put: function(self, url, params, headers, sync) {
             return self._send('PUT', url, params, headers, sync);
         },
-        upload: function(self, url, file, sync) {
-            pyscript.check(url, String);
-
-            var async = pyscript.async();
-            var formData = new FormData();
-
-            formData.append("upload", file);
-            var xhr = new XMLHttpRequest();
-            xhr.onload = handleResponse;
-            xhr.onerror = handleResponse;
-            xhr.open('POST', url, !sync);
-
-            if (self.headers){
-                for (var header in self.headers) {
-                    if (self.headers.hasOwnProperty(header)) {
-                        xhr.setRequestHeader(header, self.headers[header]);
-                    }
-                }
-            }
-
-            if (pyscript.isFunction(self.beforeRequest)) {
-                self.beforeRequest.call(null, xhr);
-            }
-            xhr.send(formData);
-
-            return async.promise;
-
-            function handleResponse() {
-                var exit;
-                for (var i=0; i<self.interceptors.length; i++) {
-                    exit = self.interceptors[i].call(this);
-                    if (exit) return;
-                }
-                self._parseStatus(this);
-                async.bind(this).resolve.apply(async);
-            }
+        upload: function(self, url, file, headers, sync) {
+            self._send('POST', url, file, headers, sync, true);
         },
-        _send: function(self, method, url, params, headers, sync) {
+        _send: function(self, method, url, params, headers, sync, uploadFile) {
             pyscript.check(method, String);
             pyscript.check(method, url);
 
             var async = pyscript.async();
 
-            headers = pyscript.extend({'Content-Type': 'application/json'}, headers || {});
+            headers = headers || {};
             if (self.headers) pyscript.extend(headers, self.headers);
-            params = JSON.stringify(params);
-            var xhr = new XMLHttpRequest();
-            xhr.onload = handleResponse;
-            xhr.onerror = handleResponse;
-            xhr.open(method, url, !sync);
-            for (var key in headers)
-                if (headers.hasOwnProperty(key))
-                    xhr.setRequestHeader(key, headers[key]);
 
-            if (pyscript.isFunction(self.beforeRequest)) {
-                self.beforeRequest.call(null, xhr);
+            var data;
+            if (uploadFile) {
+                data = new FormData();
+                data.append("upload", params);
             }
-            xhr.send(params);
+            else {
+                data = JSON.stringify(params);
+                headers['Content-Type'] = 'application/json';
+            }
+
+            var route = self._matchRoute(method, url);
+
+            if (route) {
+                route.callback(data, {headers: headers, url: url, method: method});
+            }
+
+            if (!route || route.callThrough) {
+                var xhr = new XMLHttpRequest();
+                xhr.onload = handleResponse;
+                xhr.onerror = handleResponse;
+                xhr.open(method, url, !sync);
+
+                for (var key in headers)
+                    if (headers.hasOwnProperty(key))
+                        xhr.setRequestHeader(key, headers[key]);
+
+                xhr.send(data);
+            }
 
             return sync ? xhr : async.promise;
 
@@ -131,6 +146,20 @@ pyscript.defmodule('requests')
                 self._parseStatus(this);
                 async.bind(this).resolve();
             }
+        },
+        _matchRoute: function(self, method, url) {
+            var result, route;
+            var priority = -1;
+            for (var i = 0; i < self.routes.array.length; i++) {
+                route = self.routes.array[i];
+                if (route.method == method && route.pattern.test(url)) {
+                    if (route.priority > priority) {
+                        priority = route.priority;
+                        result = route;
+                    }
+                }
+            }
+            return result;
         },
         _parseStatus: function(self, thisArg) {
             var status = thisArg.status;

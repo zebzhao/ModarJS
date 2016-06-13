@@ -19,7 +19,7 @@
         resolve: function() {
             var args = arguments;
             var self = this;
-            this._callbacks.invoke(function (e) {
+            this._callbacks.map(function (e) {
                 e.apply(self._binding, args);
             })
         }
