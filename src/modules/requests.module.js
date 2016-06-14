@@ -115,7 +115,7 @@ pyscript.defmodule('requests')
             return self._send('PUT', url, params, headers, sync);
         },
         upload: function(self, url, file, headers, sync) {
-            self._send('POST', url, file, headers, sync, true);
+            return self._send('POST', url, file, headers, sync, true);
         },
         _send: function(self, method, url, params, headers, sync, uploadFile) {
             pyscript.check(method, String);
