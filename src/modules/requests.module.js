@@ -136,34 +136,18 @@ pyscript.defmodule('requests')
                 headers['Content-Type'] = 'application/json';
             }
 
-            var exit;
-            for (var interceptor,i=0; i<self.interceptors.length; i++) {
-                interceptor = self.interceptors[i];
-                if (interceptor.request) {
-                    exit = interceptor.request(data, {headers: headers, url: url, method: method});
-                    if (exit === false) return;
-                }
-            }
+
+            var proceed = self._triggerInterceptors(
+                'request', null, [data, {headers: headers, url: url, method: method}]);
+            if (!proceed) return;
+
 
             var route = self._matchRoute(method, url);
 
             if (route) {
-                var response = route.callback(data, {headers: headers, url: url, method: method}) || {};
                 if (!route.callThrough) {
-                    var responseObject = {
-                        status: response[0],
-                        statusText: response[3] || self._defaultStatusText[status],
-                        getResponseHeader: function(name) {
-                            var headers = response[2] || {};
-                            return headers[name];
-                        },
-                        responseText: pyscript.isString(response[1]) ?
-                            response[1] : JSON.stringify(response[1])
-                    };
-
-                    pyscript.defer(function() {
-                        async.bind(responseObject).resolve();
-                    });
+                    var response = route.callback(data, {headers: headers, url: url, method: method}) || {};
+                    self._resolveProxyResponse(response, async);
                 }
             }
 
@@ -183,17 +167,23 @@ pyscript.defmodule('requests')
             return sync ? xhr : async.promise;
 
             function handleResponse() {
-                var exit;
-                for (var interceptor,i=0; i<self.interceptors.length; i++) {
-                    interceptor = self.interceptors[i];
-                    if (interceptor.response) {
-                        exit = interceptor.response.call(this);
-                        if (exit === false) return;
-                    }
-                }
                 self._parseStatus(this);
-                async.bind(this).resolve();
+                var proceed = self._triggerInterceptors('response', this);
+                if (proceed) {
+                    async.bind(this).resolve();
+                }
             }
+        },
+        _triggerInterceptors: function(self, type, thisArg, args) {
+            var exit;
+            for (var interceptor,i=0; i<self.interceptors.length; i++) {
+                interceptor = self.interceptors[i];
+                if (interceptor[type]) {
+                    exit = interceptor[type].apply(thisArg, args);
+                    if (exit === false) return false;
+                }
+            }
+            return true;
         },
         _matchRoute: function(self, method, url) {
             var result, route;
@@ -208,6 +198,27 @@ pyscript.defmodule('requests')
                 }
             }
             return result;
+        },
+        _resolveProxyResponse: function(self, response, async) {
+            var responseObject = {
+                status: response[0],
+                statusText: response[3] || self._defaultStatusText[status],
+                getResponseHeader: function(name) {
+                    var headers = response[2] || {};
+                    return headers[name];
+                },
+                responseText: pyscript.isString(response[1]) ?
+                    response[1] : JSON.stringify(response[1])
+            };
+
+            self._parseStatus(responseObject);
+            var proceed = self._triggerInterceptors('response', responseObject);
+
+            if (proceed) {
+                pyscript.defer(function () {
+                    async.bind(responseObject).resolve();
+                });
+            }
         },
         _parseStatus: function(self, thisArg) {
             var status = thisArg.status;
