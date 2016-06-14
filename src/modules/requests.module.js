@@ -138,7 +138,7 @@ pyscript.defmodule('requests')
 
 
             var proceed = self._triggerInterceptors(
-                'request', null, [data, {headers: headers, url: url, method: method}]);
+                'request', null, [params, {headers: headers, url: url, method: method}]);
             if (!proceed) return;
 
 
@@ -146,7 +146,7 @@ pyscript.defmodule('requests')
 
             if (route) {
                 if (!route.callThrough) {
-                    var response = route.callback(data, {headers: headers, url: url, method: method}) || {};
+                    var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
                     self._resolveProxyResponse(response, async);
                 }
             }
@@ -202,7 +202,7 @@ pyscript.defmodule('requests')
         _resolveProxyResponse: function(self, response, async) {
             var responseObject = {
                 status: response[0],
-                statusText: response[3] || self._defaultStatusText[status],
+                statusText: response[3] || self._defaultStatusText[response[0]],
                 getResponseHeader: function(name) {
                     var headers = response[2] || {};
                     return headers[name];
