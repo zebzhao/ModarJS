@@ -1075,7 +1075,10 @@ pyscript.defmodule('requests')
                         responseText: pyscript.isString(response[1]) ?
                             response[1] : JSON.stringify(response[1])
                     };
-                    async.bind(responseObject).resolve();
+                    
+                    pyscript.defer(function() {
+                        async.bind(responseObject).resolve();
+                    });
                 }
             }
 
