@@ -10,6 +10,7 @@ Version 0.2.5
 - changed: `requests.interceptors` now takes an object which can be for requests as well
 - changed: renamed `list.invoke` with `list.map`
 - fixed: `requests.upload` can now specify headers
+- fixed: `cache.storeFile` should now work with `File` objects
 - removed: `str.sprintf`, which wasn't working in previous version
 - removed: `requests.beforeRequest`, replaced by `requests.interceptors`
 

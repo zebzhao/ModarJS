@@ -671,7 +671,7 @@ pyscript.defmodule('cache')
                 self._storage[url] = {localUrl: e.target.result, file: file};
                 async.resolve(url, e.target.result);
             };
-            reader.readAsDataURL(file.file);
+            reader.readAsDataURL(file);
             return async.promise;
         },
         /**
