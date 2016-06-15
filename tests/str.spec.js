@@ -51,4 +51,10 @@ describe('lst', function () {
         var str = pyscript.str('great {man}, {slayer}');
         expect(str.format({man: 'bob', slayer: 'batter'})).toBe('great bob, batter');
     });
+
+
+    it('should split', function() {
+        var arr = pyscript.str('this is awesome').split(" ", 1);
+        expect(arr).toEqual(["this", "is awesome"]);
+    });
 });

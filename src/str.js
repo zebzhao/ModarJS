@@ -29,6 +29,12 @@
                 return index == 0 ? match.toLowerCase() : match.toUpperCase();
             });
         },
+        split: function(delimiter, limit) {
+            var arr = this.string.split(delimiter);
+            var result = arr.splice(0,limit);
+            result.push(arr.join(delimiter));
+            return result;
+        },
         format: function(obj) {
             var str = this.string;
             for (var name in obj) {

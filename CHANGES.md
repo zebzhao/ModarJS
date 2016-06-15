@@ -5,6 +5,7 @@ Here you can see the full list of changes between each PyScript release.
 
 Version 0.2.5
 -----------
+- added: `str.split` now mimicks python string split
 - changed: `requests.interceptors` must return explicitly false to exit handling of response
 - changed: `requests.interceptors` now takes an object which can be for requests as well
 - changed: renamed `list.invoke` with `list.map`
