@@ -29,9 +29,11 @@
                 return index == 0 ? match.toLowerCase() : match.toUpperCase();
             });
         },
-        sprintf: function(obj) {
-            console.warn('sprintf is deprecated, please use format instead');
-            this.format(obj);
+        split: function(delimiter, limit) {
+            var arr = this.string.split(delimiter);
+            var result = arr.splice(0,limit);
+            result.push(arr.join(delimiter));
+            return result;
         },
         format: function(obj) {
             var str = this.string;

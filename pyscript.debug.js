@@ -178,7 +178,7 @@ pyscript.defmodule = function (name) {
         },
 
         __init__: function(callback) {
-            self._callbacks.append(callback);
+            self._callbacks.push(callback);
             return self;
         },
         __new__: function(callback) {
@@ -193,7 +193,7 @@ pyscript.defmodule = function (name) {
                 return async.promise;
             }
             else if (self._status == "loading") {
-                self._callbacks.append(function() {
+                self._callbacks.push(function() {
                     async.resolve(instance);
                 });
                 return async.promise;
@@ -235,7 +235,7 @@ pyscript.defmodule = function (name) {
                     pyscript.defer(function() {
                         self._status = "loaded";
 
-                        self._callbacks.invoke(function(cb) {
+                        self._callbacks.each(function(cb) {
                             cb.call(null, instance);
                         });
 
@@ -349,7 +349,7 @@ pyscript.prefix = '';
         self._binding = null;
         self.promise = {
             then: function(callback) {
-                self._callbacks.append(callback);
+                self._callbacks.push(callback);
                 return self.promise;
             }
         }
@@ -363,7 +363,7 @@ pyscript.prefix = '';
         resolve: function() {
             var args = arguments;
             var self = this;
-            this._callbacks.invoke(function (e) {
+            this._callbacks.each(function (e) {
                 e.apply(self._binding, args);
             })
         }
@@ -430,56 +430,163 @@ pyscript.prefix = '';
 })(pyscript);
 
 (function(module) {
-    function PyList(obj) {
-        pyscript.assert(obj, Array);
-        this.array = obj;
-    }
-
-    module.extend(PyList.prototype, {
-        append: function(e) {
-            this.array.push(e);
-        },
-        unique: function() {
-            return this.array.filter(function(a,b,c) {
-                return c.indexOf(a, b + 1) == -1;
-            })
-        },
-        find: function(key, value) {
-            pyscript.check(key, String);
-            var matches = [];
-            for (var i=0; i < this.array.length; i++) {
-                if (value == this.array[i][key]) {
-                    matches.push(this.array[i]);
-                }
+    var ListMixin = {
+        removeAt:function(index){
+            if (index >= 0 && index < this.length) {
+                return this.splice(index, 1)[0];
             }
-            return matches;
+            return false;
         },
-        invoke: function(operator) {
-            pyscript.check(operator, Function);
-            var result = [];
-            for (var i=0; i < this.array.length; i++) {
-                result[i] = operator.call(this, this.array[i], i, this.array);
-            }
-            return result;
-        },
-        first: function() {
-            return this.array[0];
-        },
-        last: function() {
-            return this.array[this.array.length-1];
-        },
-        remove: function(e) {
-            var index = this.array.indexOf(e);
+        remove:function(value, thisArg){
+            var index = (thisArg || this).indexOf(value);
             if (index >= 0) {
-                this.array.splice(index, 1);
+                this.splice(index, 1);
                 return index;
             }
             return false;
+        },
+        contains: function(value) {
+            return this.indexOf(value) != -1;
+        },
+        replace: function(oldValue, newValue) {
+            this[this.indexOf(oldValue)] = newValue;
+        },
+        insertAt:function(index, item){
+            index = index || 0;
+            this.splice(index, 0, item);
+        },
+        removeWhere: function(key, value) {
+            var i = 0;
+            var results = [];
+            while (i < this.length) {
+                if (value == this[i][key]) {
+                    results.push(this.splice(i, 1));
+                }
+                else {
+                    i += 1;
+                }
+            }
+            return results;
+        },
+        removeOne: function(key, value) {
+            var i = 0;
+            while (i < this.length) {
+                if (value == this[i][key]) {
+                    return this.splice(i, 1);
+                }
+                else {i += 1;}
+            }
+            pykit.fail(pykit.replaceString("{key}: {value} cannot be removed in {array}",
+                {key: key, value: value, array: this}));
+        },
+        indexWhere: function(key, value) {
+            var results = [];
+            for (var i=0; i < this.length; i++) {
+                if (this[i][key] == value)
+                    results.push(i);
+            }
+            return results;
+        },
+        findWhere: function(key, value) {
+            var results = [];
+            for (var i=0; i < this.length; i++) {
+                if (this[i][key] == value)
+                    results.push(this[i]);
+            }
+            return results;
+        },
+        findOne: function(key, value, error) {
+            for (var i=0; i < this.length; i++) {
+                // Apparently 1 == "1" in JS
+                if (this[i][key] === value)
+                    return this[i];
+            }
+            if (error)
+                pykit.fail(pykit.replaceString("{key}: {value} not found in {array}",
+                    {key: key, value: value, array: this}));
+        },
+        copy: function() {
+            return this.slice();
+        },
+        first: function() {
+            return this[0];
+        },
+        last: function() {
+            return this[this.length-1];
+        },
+        until: function(operator, thisArg) {
+            var copy = this.slice();
+            var value, i=0;
+            while (copy.length) {
+                value = copy.shift();
+                if (!operator.call(thisArg, value, copy)) {
+                    copy.push(value);
+                    i++;
+                }
+                else {
+                    i = 0;
+                }
+                if (copy.length == 0){
+                    break;
+                }
+                else if (i > copy.length) {
+                    pykit.fail("Infinite loop detected.");
+                    break;  // Infinite loop detected.
+                }
+            }
+        },
+        any: function(operator, thisArg) {
+            for (var i=0; i < this.length; i++) {
+                if (operator.call(thisArg || this, this[i], i)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        all: function(operator, thisArg) {
+            for (var i=0; i < this.length; i++) {
+                if (!operator.call(thisArg || this, this[i], i)) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        each: function(operator, thisArg) {
+            var result = [];
+            for (var i=0; i < this.length; i++) {
+                result[i] = operator.call(thisArg || this, this[i], i);
+            }
+            return result;
+        },
+        remap: function(operator, thisArg) {
+            for (var i=0; i < this.length; i++) {
+                this[i] = operator.call(thisArg || this, this[i]);
+            }
+        },
+        filter:function(operator, thisArg) {
+            var results = [];
+            for (var i=0; i < this.length; i++) {
+                if (operator.call(thisArg || this, this[i])){
+                    results.push(this[i]);
+                }
+            }
+            return results;
+        },
+        insertSorted: function(item, cmp, thisArg) {
+            for (var sort,i=this.length-1; i >= 0; i--) {
+                sort = cmp.call(thisArg || this, item, this[i]);
+                if (sort >= 0){
+                    this.insertAt(i, item);
+                    return i;
+                }
+            }
+            this.push(item);
+            return i;
         }
-    });
+    };
 
-    module.list = function(list) {
-        return new PyList(list || []);
+    module.list = function(array){
+        return module.extend((array || []), ListMixin);
     };
 
 })(pyscript);
@@ -515,9 +622,11 @@ pyscript.prefix = '';
                 return index == 0 ? match.toLowerCase() : match.toUpperCase();
             });
         },
-        sprintf: function(obj) {
-            console.warn('sprintf is deprecated, please use format instead');
-            this.format(obj);
+        split: function(delimiter, limit) {
+            var arr = this.string.split(delimiter);
+            var result = arr.splice(0,limit);
+            result.push(arr.join(delimiter));
+            return result;
         },
         format: function(obj) {
             var str = this.string;
@@ -562,7 +671,7 @@ pyscript.defmodule('cache')
                 self._storage[url] = {localUrl: e.target.result, file: file};
                 async.resolve(url, e.target.result);
             };
-            reader.readAsDataURL(file.file);
+            reader.readAsDataURL(file);
             return async.promise;
         },
         /**
@@ -814,12 +923,65 @@ pyscript.defmodule('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
-        self.beforeRequest = null;
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
+        self.routes = pyscript.list();
+        self._defaultStatusText = {
+            200: 'OK',
+            201: 'Created',
+            202: 'Accepted',
+            204: 'No Content',
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            402: 'Payment Required',
+            403: 'Forbidden',
+            404: 'Not Found',
+            405: 'Method Not Allowed',
+            406: 'Not Acceptable',
+            409: 'Conflict',
+            500: 'Internal Server Error',
+            501: 'Not Implemented',
+            502: 'Bad Gateway',
+            503: 'Service Unavailable',
+            504: 'Gateway Timeout',
+            511: 'Network Authentication Required'
+        }
     })
 
     .def({
+        whenGET: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('GET', urlPattern, callback, callThrough, priority);
+        },
+        whenPOST: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('POST', urlPattern, callback, callThrough, priority);
+        },
+        whenPATCH: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('PATCH', urlPattern, callback, callThrough, priority);
+        },
+        whenPUT: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('PUT', urlPattern, callback, callThrough, priority);
+        },
+        whenDELETE: function(self, urlPattern, callback, callThrough, priority) {
+            return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
+        },
+        _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
+            pyscript.check(callback, Function);
+            var existing = self.routes.findOne('pattern', urlPattern);
+            var update = {
+                priority: priority || 1,
+                pattern: new RegExp(urlPattern),
+                method: method,
+                callback: callback,
+                callThrough: callThrough || false
+            };
+            if (existing) {
+                pyscript.extend(existing, update)
+            }
+            else {
+                self.routes.push(update);
+            }
+            return self;
+        },
         mockSetup: function(self) {
             pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
 
@@ -873,75 +1035,111 @@ pyscript.defmodule('requests')
         put: function(self, url, params, headers, sync) {
             return self._send('PUT', url, params, headers, sync);
         },
-        upload: function(self, url, file, sync) {
-            pyscript.check(url, String);
-
-            var async = pyscript.async();
-            var formData = new FormData();
-
-            formData.append("upload", file);
-            var xhr = new XMLHttpRequest();
-            xhr.onload = handleResponse;
-            xhr.onerror = handleResponse;
-            xhr.open('POST', url, !sync);
-
-            if (self.headers){
-                for (var header in self.headers) {
-                    if (self.headers.hasOwnProperty(header)) {
-                        xhr.setRequestHeader(header, self.headers[header]);
-                    }
-                }
-            }
-
-            if (pyscript.isFunction(self.beforeRequest)) {
-                self.beforeRequest.call(null, xhr);
-            }
-            xhr.send(formData);
-
-            return async.promise;
-
-            function handleResponse() {
-                var exit;
-                for (var i=0; i<self.interceptors.length; i++) {
-                    exit = self.interceptors[i].call(this);
-                    if (exit) return;
-                }
-                self._parseStatus(this);
-                async.bind(this).resolve.apply(async);
-            }
+        upload: function(self, url, file, headers, sync) {
+            return self._send('POST', url, file, headers, sync, true);
         },
-        _send: function(self, method, url, params, headers, sync) {
+        _send: function(self, method, url, params, headers, sync, uploadFile) {
             pyscript.check(method, String);
             pyscript.check(method, url);
 
             var async = pyscript.async();
 
-            headers = pyscript.extend({'Content-Type': 'application/json'}, headers || {});
+            headers = headers || {};
             if (self.headers) pyscript.extend(headers, self.headers);
-            params = JSON.stringify(params);
-            var xhr = new XMLHttpRequest();
-            xhr.onload = handleResponse;
-            xhr.onerror = handleResponse;
-            xhr.open(method, url, !sync);
-            for (var key in headers)
-                if (headers.hasOwnProperty(key))
-                    xhr.setRequestHeader(key, headers[key]);
 
-            if (pyscript.isFunction(self.beforeRequest)) {
-                self.beforeRequest.call(null, xhr);
+            var data;
+            if (uploadFile) {
+                data = new FormData();
+                data.append("upload", params);
+                data.upload = params;
             }
-            xhr.send(params);
+            else {
+                data = JSON.stringify(params);
+                headers['Content-Type'] = 'application/json';
+            }
+
+
+            var proceed = self._triggerInterceptors(
+                'request', null, [params, {headers: headers, url: url, method: method}]);
+            if (!proceed) return;
+
+
+            var route = self._matchRoute(method, url);
+
+            if (route) {
+                if (!route.callThrough) {
+                    var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
+                    self._resolveProxyResponse(response, async);
+                }
+            }
+
+            if (!route || route.callThrough) {
+                var xhr = new XMLHttpRequest();
+                xhr.onload = handleResponse;
+                xhr.onerror = handleResponse;
+                xhr.open(method, url, !sync);
+
+                for (var key in headers)
+                    if (headers.hasOwnProperty(key))
+                        xhr.setRequestHeader(key, headers[key]);
+
+                xhr.send(data);
+            }
 
             return sync ? xhr : async.promise;
 
             function handleResponse() {
-                var exit;
-                for (var i=0; i<self.interceptors.length; i++) {
-                    exit = self.interceptors[i].call(this);
-                    if (exit) return;
-                }
                 self._parseStatus(this);
-                async.bind(this).resolve();
+                var proceed = self._triggerInterceptors('response', this);
+                if (proceed) {
+                    async.bind(this).resolve();
+                }
+            }
+        },
+        _triggerInterceptors: function(self, type, thisArg, args) {
+            var exit;
+            for (var interceptor,i=0; i<self.interceptors.length; i++) {
+                interceptor = self.interceptors[i];
+                if (interceptor[type]) {
+                    exit = interceptor[type].apply(thisArg, args);
+                    if (exit === false) return false;
+                }
+            }
+            return true;
+        },
+        _matchRoute: function(self, method, url) {
+            var result, route;
+            var priority = -1;
+            for (var i = 0; i < self.routes.length; i++) {
+                route = self.routes[i];
+                if (route.method == method && route.pattern.test(url)) {
+                    if (route.priority > priority) {
+                        priority = route.priority;
+                        result = route;
+                    }
+                }
+            }
+            return result;
+        },
+        _resolveProxyResponse: function(self, response, async) {
+            var responseObject = {
+                status: response[0],
+                statusText: response[3] || self._defaultStatusText[response[0]],
+                getResponseHeader: function(name) {
+                    var headers = response[2] || {};
+                    return headers[name];
+                },
+                responseText: pyscript.isString(response[1]) ?
+                    response[1] : JSON.stringify(response[1])
+            };
+
+            self._parseStatus(responseObject);
+            var proceed = self._triggerInterceptors('response', responseObject);
+
+            if (proceed) {
+                pyscript.defer(function () {
+                    async.bind(responseObject).resolve();
+                });
             }
         },
         _parseStatus: function(self, thisArg) {
