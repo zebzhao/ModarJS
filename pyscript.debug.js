@@ -1051,6 +1051,7 @@ pyscript.defmodule('requests')
             if (uploadFile) {
                 data = new FormData();
                 data.append("upload", params);
+                data.upload = params;
             }
             else {
                 data = JSON.stringify(params);
