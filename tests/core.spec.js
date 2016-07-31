@@ -56,4 +56,28 @@ describe('pyscript', function () {
             done();
         });
     });
+
+
+    it('should handle duplicate loading', function(done) {
+        var initCount = 0;
+        pyscript.module('dup1').__init__(function() {
+            initCount++;
+        });
+        pyscript.initialize('dup1').then(function() {
+            // This was called first, will initiate actual loading.
+            initCount++;
+            expect(initCount).toBe(3);
+            done();
+        });
+        pyscript.initialize('dup1').then(function() {
+            initCount++;
+        });
+    });
+
+
+    it('should handle aliasing', function() {
+        pyscript.alias('http://bull.js', 'cow.js');
+        pyscript.import('http://bull.js');
+        expect(document.head.getElementsByTagName('script')[0].getAttribute('src')).toBe('cow.js');
+    });
 });

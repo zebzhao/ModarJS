@@ -92,11 +92,11 @@ pyscript.partial = function(callback) {
 
 pyscript.alias = function(url, value) {
     var aliases = pyscript._aliases;
-    if (value) {
-        aliases[url] = value;
-    }
     if (aliases[url]) {
         pyscript.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
+    }
+    if (value) {
+        aliases[url] = value;
     }
     var result = aliases[url] || url;
     return result.indexOf("://") == -1 ? pyscript.base + result : result;
