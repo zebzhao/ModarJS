@@ -116,7 +116,7 @@ pyscript.import = function(url) {
             var element = document.createElement(tag);
 
             document.head.appendChild(element);
-            
+
             element.onload = function() {
                 pyscript.log(url, "loaded.");
                 pyscript._cache[url].map(function(resolver) {

@@ -18,7 +18,8 @@ module.exports = function(config){
         reporters: ['progress', 'coverage'],
 
         preprocessors: {
-            'src/**/*.js': ['coverage']
+            'src/modules/*.js': ['coverage'],
+            'src/*.js': ['coverage']
         },
 
         // web server port
