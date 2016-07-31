@@ -59,9 +59,7 @@ pyscript.module('cache')
                             else {
                                 reject(response);
                             }
-                        }, function(response) {
-                            reject(response);
-                        })
+                        }, reject);
                 }
             });
         },
@@ -77,7 +75,7 @@ pyscript.module('cache')
             if (destKey == sourceKey) {
                 return;
             }
-            if (!self._storage[sourceKey]) {
+            if (self._storage[sourceKey] === undefined) {
                 throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
             }
             self._storage[destKey] = self._storage[sourceKey];
@@ -89,13 +87,13 @@ pyscript.module('cache')
         },
         contains: function(self, key) {
             pyscript.check(key, String);
-            return !!self._storage[key];
+            return self._storage[key] !== undefined;
         },
         store: function(self, key, value) {
             self._storage[key] = value;
         },
         get: function(self, id, defaultValue) {
-            return self._storage[id] || defaultValue;
+            return self.contains(id) ? self._storage[id] : defaultValue;
         },
         keys: function(self) {
             return Object.keys(self._storage);

@@ -66,42 +66,6 @@ pyscript.module('requests')
             }
             return self;
         },
-        mockSetup: function(self) {
-            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
-
-            self.mockServer = {
-                routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
-                request: function(method, url, params, headers, sync) {
-                    return new core.Promise(function(resolve, reject) {
-                        var handler = self.mockServer.routes[method][url];
-                        if (pyscript.isFunction(handler)) {
-                            resolve(handler.call(null, url, params, headers, sync));
-                        }
-                    });
-                },
-                defRoute: function(method, url, callback) {
-                    pyscript.check(method, String);
-                    pyscript.check(callback, Function);
-                    method = method.toUpperCase();
-                    pyscript.assert(self.mockServer.routes[method], "method must be GET/POST/PATCH/PUT/DELETE.")
-                    self.mockServer.routes[method][url] = callback;
-                    return self.mockServer;
-                }
-            };
-
-            spyOn(self, 'get').and.callFake(
-                pyscript.partial(self.mockServer.request, 'GET'));
-            spyOn(self, 'put').and.callFake(
-                pyscript.partial(self.mockServer.request, 'PUT'));
-            spyOn(self, 'del').and.callFake(
-                pyscript.partial(self.mockServer.request, 'DELETE'));
-            spyOn(self, 'patch').and.callFake(
-                pyscript.partial(self.mockServer.request, 'PATCH'));
-            spyOn(self, 'post').and.callFake(
-                pyscript.partial(self.mockServer.request, 'POST'));
-            spyOn(self, 'upload').and.callFake(
-                pyscript.partial(self.mockServer.request, 'UPLOAD'));
-        },
         get: function(self, url, headers, sync) {
             return self._send('GET', url, null, headers, sync);
         },
@@ -140,7 +104,7 @@ pyscript.module('requests')
                 }
 
                 var proceed = self._triggerInterceptors(
-                    'request', null, [params, {headers: headers, url: url, method: method}]);
+                    'request', [params, method, url, params, headers]);
                 if (!proceed) return;
 
 
@@ -157,12 +121,12 @@ pyscript.module('requests')
                     var xhr = new XMLHttpRequest();
                     xhr.onload = function() {
                         self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('response', this);
+                        var proceed = self._triggerInterceptors('response', [this]);
                         if (proceed) resolve(this);
                     };
                     xhr.onerror = function() {
                         self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('error', this);
+                        var proceed = self._triggerInterceptors('error', [this]);
                         if (proceed) reject(this);
                     };
                     xhr.open(method, url, !sync);
@@ -175,12 +139,12 @@ pyscript.module('requests')
                 }
             });
         },
-        _triggerInterceptors: function(self, type, thisArg, args) {
+        _triggerInterceptors: function(self, type, args) {
             var exit;
             for (var interceptor,i=0; i<self.interceptors.length; i++) {
                 interceptor = self.interceptors[i];
                 if (interceptor[type]) {
-                    exit = interceptor[type].apply(thisArg, args);
+                    exit = interceptor[type].apply(null, args);
                     if (exit === false) return false;
                 }
             }
@@ -200,9 +164,10 @@ pyscript.module('requests')
             }
             return result;
         },
-        _resolveProxyResponse: function(self, promise, resolver) {
+        _resolveProxyResponse: function(self, response, resolver) {
+            var promise = response;
             if (!promise.then) {
-                promise = core.Promise.resolve(promise);
+                promise = core.Promise.resolve(response);
             }
             promise.then(function(response) {
                 var responseObject = {
@@ -215,9 +180,9 @@ pyscript.module('requests')
                     responseText: pyscript.isString(response[1]) ?
                         response[1] : JSON.stringify(response[1])
                 };
-
+                
                 self._parseStatus(responseObject);
-                var proceed = self._triggerInterceptors('response', responseObject);
+                var proceed = self._triggerInterceptors('response', [responseObject]);
 
                 if (proceed) {
                     resolver.resolve(responseObject);

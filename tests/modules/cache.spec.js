@@ -13,7 +13,6 @@ describe('cache.module', function () {
 
     it('should move cached keys to another key', function() {
         pyscript.cache.store("keyA", "");
-        console.log(pyscript.cache._storage);
         expect(pyscript.cache.get("keyA")).toBe("");
         pyscript.cache.move("keyA", "keyB");
         expect(pyscript.cache.get("keyA")).toBeUndefined();
@@ -61,26 +60,21 @@ describe('cache.module', function () {
 
     describe('cache.module fetch', function() {
         beforeEach(function(done) {
-            pyscript.initialize('requests').then(function() {
+            pyscript.initialize('requests').then(function(requests) {
+                requests.whenGET(/cachekeyZ/, function() {
+                    return [200, "Awesome"];
+                });
                 done();
             });
         });
 
         it('should fetch values from server', function(done) {
-            pyscript.requests.mockSetup();
-
-            pyscript.requests.mockServer.defRoute("GET", "keyZ", function() {
-                return {responseText: "Awesome", http: {success: true}};
-            });
-
-            pyscript.cache.fetch("keyZ",
+            pyscript.cache.fetch("cachekeyZ",
                 function(value) { return value + ":Parsed"; })
                 .then(function(context) {
                     expect(context.result).toBe("Awesome:Parsed");
                     done();
                 });
-
-            expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
         });
     });
 });

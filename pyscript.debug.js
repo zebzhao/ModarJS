@@ -1,7 +1,26 @@
-window.pyscript = {modules: {}};
+window.pyscript = {modules: {}, _aliases: {}, _cache: {}};
 
 pyscript.defer = function(callback) {
     setTimeout(callback, 1);
+};
+
+pyscript.log = function() {
+    if (console && console.log && pyscript.debug) {
+        console.log.apply(null, arguments);
+    }
+};
+
+pyscript.range = function(start, stop, step) {
+    if (stop === undefined) {
+        stop = start;
+        start = 0;
+    }
+    step = step || 1;
+    var result = [];
+    for (var i=start; i < stop; i += step) {
+        result.push(i);
+    }
+    return result;
 };
 
 pyscript.noop = function() {};
@@ -63,6 +82,7 @@ pyscript.any = function(func, object) {
 };
 
 pyscript.partial = function(callback) {
+    pyscript.check(callback, Function);
     var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
     return function() {
         var more_args = [].slice.call(arguments);
@@ -70,192 +90,152 @@ pyscript.partial = function(callback) {
     }
 };
 
-(function() {
-    pyscript.mockDependencies = function(mapping) {
-        pyscript.assert(jasmine, "mockDependencies() must be called from Jasmine testing.");
-        spyOn(pyscript, '_getURL').and.callFake(function(url) {
-            if (mapping[url]) {
-                console.log("%c" + url + " overridden by " + mapping[url], "color:DodgerBlue;");
-                return getURL(mapping[url]);
-            }
-            return getURL(url);
-        });
-    };
-
-    pyscript._getURL = getURL;
-
-    function getURL(url) {
-        if (url.indexOf("://") != -1)
-            return url;
-        else return pyscript.prefix + url;
+pyscript.alias = function(url, value) {
+    var aliases = pyscript._aliases;
+    if (value) {
+        aliases[url] = value;
     }
-})();
+    if (aliases[url]) {
+        pyscript.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
+    }
+    var result = aliases[url] || url;
+    return result.indexOf("://") == -1 ? pyscript.base + result : result;
+};
 
-pyscript.import = function(tagName, props) {
+pyscript.import = function(url) {
+    url = pyscript.alias(url);
     return new core.Promise(function(resolve, reject) {
-        var element = document.createElement(tagName);
-        document.head.appendChild(element);
-        // Async may not be effective due to ajax protocols and queueing
-        element.onload = resolve;
-        element.onerror = reject;
-        pyscript.extend(element, props);
+        if (pyscript._cache[url]) {
+            pyscript._cache[url].push({resolve: resolve, reject: reject});
+        }
+        else {
+            pyscript._cache[url] = [{resolve: resolve, reject: reject}];
+            var ext = url.split('.').pop();
+            var tag = ext == 'js' ? 'script' : 'link';
+            var props = ext == 'js' ? {src: url} : {href: url};
+            var element = document.createElement(tag);
+
+            document.head.appendChild(element);
+
+            element.onload = function() {
+                pyscript.log(url, "loaded.");
+                pyscript._cache[url].map(function(resolver) {
+                    resolver.resolve();
+                })
+            };
+            element.onerror = function() {
+                pyscript.log(url, "failed to loaded.");
+                pyscript._cache[url].map(function(resolver) {
+                    resolver.reject();
+                })
+            };
+            pyscript.extend(element, props);
+        }
     });
 };
 
 pyscript.initialize = function(name) {
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var mod = all_modules[name];
+    var module = pyscript.modules[name];
 
-    if (mod) {
-        return mod._initialize();
+    if (module) {
+        return module._initialize();
     }
     else {
-        pyscript.assert("Module " + name + " is not defined!")
+        pyscript.assert(false, "Module " + name + " is not defined!")
     }
 };
 
 pyscript.module = function(name) {
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var result = all_modules[name];
-    return result ? result._instance : null;
-};
+    if (!pyscript.modules[name]) {
+        pyscript.modules[name] = {
+            __name__: name,
+            __initialized__: false,
+            __state__: "",
 
-pyscript.defmodule = function (name) {
-    var instance = pyscript.module(name);
-    if (!instance) {
-        instance = {__name__: name, __initialized__: false};
-        pyscript.modules[name] = instance;
+            _scripts: [],
+            _modules: [],
+            _callbacks: Array.from([])
+        };
+
+        (function(module) {
+
+            module.import = function(url) {
+                module._scripts.push(url);
+                return module;
+            };
+
+            module.require = function(name) {
+                module._modules.push(name);
+                return module;
+            };
+
+            module.def = function(values) {
+                var modified = pyscript.map(function(callable, i) {
+                    return pyscript.partial(callable, module);
+                }, values);
+
+                pyscript.extend(module, modified);
+
+                return module;
+            };
+
+            module.__init__ = function(callback) {
+                module._callbacks.push(callback);
+                return module;
+            };
+
+            module.__new__ = function(callback) {
+                callback.call(null, module);
+                return module;
+            };
+
+            module._initialize = function() {
+                return new core.Promise(function(resolve, reject) {
+
+                    switch(module.__state__) {
+                        case 'loaded':
+                            resolve(module);
+                            break;
+                        case 'loading':
+                            module.__init__(resolve);
+                            break;
+                        default:
+                            pyscript.log("%c" + name + " loading...", "color:DodgerBlue;");
+                            module.__state__ = 'loading';
+                            importScripts(module._scripts)
+                                .then(function() {
+                                    initializeModules(module._modules)
+                                        .then(function() {
+                                            pyscript.log("%c" + name + " loaded", "font-weight:bold;");
+                                            module.__initialized__ = true;
+                                            module.__state__ = 'loaded';
+                                            module._callbacks.forEach(function(cb) {
+                                                cb.call(null, module);
+                                            });
+                                            resolve(module);
+                                        }, reject);
+                                }, reject);
+                    }
+                });
+            };
+
+        }(pyscript.modules[name]));
     }
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var cachedFiles = window._py_cached_files = window._py_cached_files || {};
+    
+    return pyscript.modules[name];
 
-    if (all_modules[name])
-        return all_modules[name];
 
-    // Define package in internal package cache
-    var self = all_modules[name] = {
-        __name__: name,
+    function importScripts(scripts) {
+        return core.Promise.all(scripts.map(pyscript.import));
+    }
 
-        _dependencies: [],
-        _modules: [],
-        _instance: instance,
-        _status: "",
-        _callbacks: Array.from([]),
-
-        import: function(url) {
-            self._dependencies.push({url: url});
-            return self;
-        },
-
-        initialize: function(name) {
-            self._modules.push(name);
-            return self;
-        },
-
-        def: function(values) {
-            var modified = pyscript.map(function(callable, i) {
-                if (pyscript.isFunction(callable)) {
-                    return pyscript.partial(callable, instance);
-                }
-                else pyscript.assert(false, "'" + i + "' cannot be set as a function of '" + name + "'");
-
-            }, values);
-
-            pyscript.extend(instance, modified);
-
-            return self;
-        },
-
-        __init__: function(callback) {
-            self._callbacks.push(callback);
-            return self;
-        },
-        __new__: function(callback) {
-            callback.call(null, instance);
-            return self;
-        },
-        _initialize: function() {
-            return new core.Promise(function(resolve, reject) {
-                if (self._status == "loaded") {
-                    resolve(instance);
-                }
-                else if (self._status == "loading") {
-                    self._callbacks.push(function() {
-                        resolve(instance);
-                    });
-                }
-                else if (pyscript.debug) console.log("%c" + name + " loading...", "color:DodgerBlue;");
-
-                self._status = "loading";
-                var loadedCount = 0;
-
-                function loadNext() {
-                    var dependencies = self._dependencies;
-
-                    if (dependencies.length == loadedCount) {
-                        loadNextModule();
-                    }
-                    else if (loadedCount < dependencies.length) {
-                        var url = dependencies[loadedCount].url;
-                        if (cachedFiles[url] !== undefined) {
-                            loadedCount++;
-                            loadNext();
-                        }
-                        else {
-                            cachedFiles[url] = false;
-                            pyscript.import("script", {src: pyscript._getURL(url)})
-                                .then(function() {
-                                    if (pyscript.debug) console.log(url, "loaded");
-                                    cachedFiles[url] = true;
-                                    loadedCount++;
-                                    loadNext();
-                                });
-                        }
-                    }
-                }
-
-                var loadedModuleCount = 0;
-                function loadNextModule() {
-                    if (self._modules.length == loadedModuleCount) {
-                        // Defer to next frame, as success callback may not be registered yet.
-                        pyscript.defer(function() {
-                            self._status = "loaded";
-
-                            self._callbacks.forEach(function(cb) {
-                                cb.call(null, instance);
-                            });
-
-                            resolve(instance);
-                            if (pyscript.debug) console.log("%c" + name + " loaded", "font-weight:bold;");
-
-                            instance.__initialized__ = true;
-                        });
-                    }
-                    else {
-                        var target = self._modules[loadedModuleCount];
-
-                        if (all_modules[target] === undefined) {
-                            pyscript.assert(false, "", "Module '" + target+ "' is not defined!");
-                        }
-                        else {
-                            pyscript.initialize(target)
-                                .then(function() {
-                                    loadedModuleCount++;
-                                    loadNextModule();
-                                });
-                        }
-                    }
-                }
-
-                loadNext();  // Get the party started!
-            });
-        }
-    };
-    return self;
+    function initializeModules(modules) {
+        return core.Promise.all(modules.map(pyscript.initialize));
+    }
 };
 
 pyscript.debug = true;
-pyscript.prefix = '';
+pyscript.base = '';
 (function(module) {
     module.extend(module, {
         assert: function(cond, message, log) {
@@ -2435,8 +2415,8 @@ else if(typeof define == 'function' && define.amd)define(function(){return __e})
 // Export to global object
 else __g.core = __e;
 }(1, 1);
-pyscript.defmodule('cache')
-
+pyscript.module('cache')
+    
     .__init__(function(self) {
         self._storage = {};
     })
@@ -2496,9 +2476,7 @@ pyscript.defmodule('cache')
                             else {
                                 reject(response);
                             }
-                        }, function(response) {
-                            reject(response);
-                        })
+                        }, reject);
                 }
             });
         },
@@ -2514,7 +2492,7 @@ pyscript.defmodule('cache')
             if (destKey == sourceKey) {
                 return;
             }
-            if (!self._storage[sourceKey]) {
+            if (self._storage[sourceKey] === undefined) {
                 throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
             }
             self._storage[destKey] = self._storage[sourceKey];
@@ -2526,13 +2504,13 @@ pyscript.defmodule('cache')
         },
         contains: function(self, key) {
             pyscript.check(key, String);
-            return !!self._storage[key];
+            return self._storage[key] !== undefined;
         },
         store: function(self, key, value) {
             self._storage[key] = value;
         },
         get: function(self, id, defaultValue) {
-            return self._storage[id] || defaultValue;
+            return self.contains(id) ? self._storage[id] : defaultValue;
         },
         keys: function(self) {
             return Object.keys(self._storage);
@@ -2540,7 +2518,8 @@ pyscript.defmodule('cache')
     });
 
 pyscript.cache = pyscript.module('cache');
-pyscript.defmodule('hotkeys')
+pyscript.module('hotkeys')
+    
     .__new__(function(self) {
         self.scope = 'all';
 
@@ -2678,7 +2657,7 @@ pyscript.defmodule('hotkeys')
 
 pyscript.hotkeys = pyscript.module('hotkeys');
 
-pyscript.defmodule('requests')
+pyscript.module('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
@@ -2746,42 +2725,6 @@ pyscript.defmodule('requests')
             }
             return self;
         },
-        mockSetup: function(self) {
-            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing!");
-
-            self.mockServer = {
-                routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
-                request: function(method, url, params, headers, sync) {
-                    return new core.Promise(function(resolve, reject) {
-                        var handler = self.mockServer.routes[method][url];
-                        if (pyscript.isFunction(handler)) {
-                            resolve(handler.call(null, url, params, headers, sync));
-                        }
-                    });
-                },
-                defRoute: function(method, url, callback) {
-                    pyscript.check(method, String);
-                    pyscript.check(callback, Function);
-                    method = method.toUpperCase();
-                    pyscript.assert(self.mockServer.routes[method], "method must be GET/POST/PATCH/PUT/DELETE.")
-                    self.mockServer.routes[method][url] = callback;
-                    return self.mockServer;
-                }
-            };
-
-            spyOn(self, 'get').and.callFake(
-                pyscript.partial(self.mockServer.request, 'GET'));
-            spyOn(self, 'put').and.callFake(
-                pyscript.partial(self.mockServer.request, 'PUT'));
-            spyOn(self, 'del').and.callFake(
-                pyscript.partial(self.mockServer.request, 'DELETE'));
-            spyOn(self, 'patch').and.callFake(
-                pyscript.partial(self.mockServer.request, 'PATCH'));
-            spyOn(self, 'post').and.callFake(
-                pyscript.partial(self.mockServer.request, 'POST'));
-            spyOn(self, 'upload').and.callFake(
-                pyscript.partial(self.mockServer.request, 'UPLOAD'));
-        },
         get: function(self, url, headers, sync) {
             return self._send('GET', url, null, headers, sync);
         },
@@ -2820,7 +2763,7 @@ pyscript.defmodule('requests')
                 }
 
                 var proceed = self._triggerInterceptors(
-                    'request', null, [params, {headers: headers, url: url, method: method}]);
+                    'request', [params, method, url, params, headers]);
                 if (!proceed) return;
 
 
@@ -2837,12 +2780,12 @@ pyscript.defmodule('requests')
                     var xhr = new XMLHttpRequest();
                     xhr.onload = function() {
                         self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('response', this);
+                        var proceed = self._triggerInterceptors('response', [this]);
                         if (proceed) resolve(this);
                     };
                     xhr.onerror = function() {
                         self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('error', this);
+                        var proceed = self._triggerInterceptors('error', [this]);
                         if (proceed) reject(this);
                     };
                     xhr.open(method, url, !sync);
@@ -2855,12 +2798,12 @@ pyscript.defmodule('requests')
                 }
             });
         },
-        _triggerInterceptors: function(self, type, thisArg, args) {
+        _triggerInterceptors: function(self, type, args) {
             var exit;
             for (var interceptor,i=0; i<self.interceptors.length; i++) {
                 interceptor = self.interceptors[i];
                 if (interceptor[type]) {
-                    exit = interceptor[type].apply(thisArg, args);
+                    exit = interceptor[type].apply(null, args);
                     if (exit === false) return false;
                 }
             }
@@ -2880,9 +2823,10 @@ pyscript.defmodule('requests')
             }
             return result;
         },
-        _resolveProxyResponse: function(self, promise, resolver) {
+        _resolveProxyResponse: function(self, response, resolver) {
+            var promise = response;
             if (!promise.then) {
-                promise = core.Promise.resolve(promise);
+                promise = core.Promise.resolve(response);
             }
             promise.then(function(response) {
                 var responseObject = {
@@ -2895,9 +2839,9 @@ pyscript.defmodule('requests')
                     responseText: pyscript.isString(response[1]) ?
                         response[1] : JSON.stringify(response[1])
                 };
-
+                
                 self._parseStatus(responseObject);
-                var proceed = self._triggerInterceptors('response', responseObject);
+                var proceed = self._triggerInterceptors('response', [responseObject]);
 
                 if (proceed) {
                     resolver.resolve(responseObject);
@@ -2926,7 +2870,7 @@ pyscript.defmodule('requests')
     });
 
 pyscript.requests = pyscript.module('requests');
-pyscript.defmodule('router')
+pyscript.module('router')
 
     .__new__(function(self) {
         self.proxy = {

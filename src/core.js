@@ -6,7 +6,7 @@ pyscript.defer = function(callback) {
 
 pyscript.log = function() {
     if (console && console.log && pyscript.debug) {
-        console.log.apply(null, Arguments);
+        console.log.apply(null, arguments);
     }
 };
 
@@ -164,7 +164,7 @@ pyscript.module = function(name) {
                 return module;
             };
 
-            module.initialize = function(name) {
+            module.require = function(name) {
                 module._modules.push(name);
                 return module;
             };
@@ -212,6 +212,7 @@ pyscript.module = function(name) {
                                             module._callbacks.forEach(function(cb) {
                                                 cb.call(null, module);
                                             });
+                                            resolve(module);
                                         }, reject);
                                 }, reject);
                     }
