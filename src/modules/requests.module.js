@@ -1,10 +1,11 @@
-pyscript.defmodule('requests')
+pyscript.module('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
         self.parsers = {echo: function(input) {return input;}};
         self.headers = null;
-        self.routes = pyscript.list();
+        self.routes = Array.from([]);
+        
         self._defaultStatusText = {
             200: 'OK',
             201: 'Created',
@@ -45,7 +46,11 @@ pyscript.defmodule('requests')
         },
         _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
             pyscript.check(callback, Function);
-            var existing = self.routes.findOne('pattern', urlPattern);
+
+            var existing = self.routes.find(function(elem) {
+                return elem['pattern'] == urlPattern;
+            });
+
             var update = {
                 priority: priority || 1,
                 pattern: new RegExp(urlPattern),
@@ -67,14 +72,12 @@ pyscript.defmodule('requests')
             self.mockServer = {
                 routes: {GET: {}, POST: {}, PATCH: {}, DELETE: {}, PUT: {}, UPLOAD: {}},
                 request: function(method, url, params, headers, sync) {
-                    var async = pyscript.async();
-                    pyscript.defer(function() {
+                    return new core.Promise(function(resolve, reject) {
                         var handler = self.mockServer.routes[method][url];
                         if (pyscript.isFunction(handler)) {
-                            async.bind(handler.call(null, url, params, headers, sync)).resolve();
+                            resolve(handler.call(null, url, params, headers, sync));
                         }
                     });
-                    return async.promise;
                 },
                 defRoute: function(method, url, callback) {
                     pyscript.check(method, String);
@@ -121,59 +124,56 @@ pyscript.defmodule('requests')
             pyscript.check(method, String);
             pyscript.check(method, url);
 
-            var async = pyscript.async();
+            return new core.Promise(function(resolve, reject) {
+                headers = headers || {};
+                if (self.headers) pyscript.extend(headers, self.headers);
 
-            headers = headers || {};
-            if (self.headers) pyscript.extend(headers, self.headers);
-
-            var data;
-            if (uploadFile) {
-                data = new FormData();
-                data.append("upload", params);
-                data.upload = params;
-            }
-            else {
-                data = JSON.stringify(params);
-                headers['Content-Type'] = 'application/json';
-            }
-
-
-            var proceed = self._triggerInterceptors(
-                'request', null, [params, {headers: headers, url: url, method: method}]);
-            if (!proceed) return;
-
-
-            var route = self._matchRoute(method, url);
-
-            if (route) {
-                if (!route.callThrough) {
-                    var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
-                    self._resolveProxyResponse(response, async);
+                var data;
+                if (uploadFile) {
+                    data = new FormData();
+                    data.append("upload", params);
+                    data.upload = params;
                 }
-            }
-
-            if (!route || route.callThrough) {
-                var xhr = new XMLHttpRequest();
-                xhr.onload = handleResponse;
-                xhr.onerror = handleResponse;
-                xhr.open(method, url, !sync);
-
-                for (var key in headers)
-                    if (headers.hasOwnProperty(key))
-                        xhr.setRequestHeader(key, headers[key]);
-
-                xhr.send(data);
-            }
-
-            return sync ? xhr : async.promise;
-
-            function handleResponse() {
-                self._parseStatus(this);
-                var proceed = self._triggerInterceptors('response', this);
-                if (proceed) {
-                    async.bind(this).resolve();
+                else {
+                    data = JSON.stringify(params);
+                    headers['Content-Type'] = 'application/json';
                 }
-            }
+
+                var proceed = self._triggerInterceptors(
+                    'request', null, [params, {headers: headers, url: url, method: method}]);
+                if (!proceed) return;
+
+
+                var route = self._matchRoute(method, url);
+
+                if (route) {
+                    if (!route.callThrough) {
+                        var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
+                        self._resolveProxyResponse(response, {resolve: resolve, reject: reject});
+                    }
+                }
+
+                if (!route || route.callThrough) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function() {
+                        self._parseStatus(this);
+                        var proceed = self._triggerInterceptors('response', this);
+                        if (proceed) resolve(this);
+                    };
+                    xhr.onerror = function() {
+                        self._parseStatus(this);
+                        var proceed = self._triggerInterceptors('error', this);
+                        if (proceed) reject(this);
+                    };
+                    xhr.open(method, url, !sync);
+
+                    for (var key in headers)
+                        if (headers.hasOwnProperty(key))
+                            xhr.setRequestHeader(key, headers[key]);
+
+                    xhr.send(data);
+                }
+            });
         },
         _triggerInterceptors: function(self, type, thisArg, args) {
             var exit;
@@ -200,26 +200,29 @@ pyscript.defmodule('requests')
             }
             return result;
         },
-        _resolveProxyResponse: function(self, response, async) {
-            var responseObject = {
-                status: response[0],
-                statusText: response[3] || self._defaultStatusText[response[0]],
-                getResponseHeader: function(name) {
-                    var headers = response[2] || {};
-                    return headers[name];
-                },
-                responseText: pyscript.isString(response[1]) ?
-                    response[1] : JSON.stringify(response[1])
-            };
-
-            self._parseStatus(responseObject);
-            var proceed = self._triggerInterceptors('response', responseObject);
-
-            if (proceed) {
-                pyscript.defer(function () {
-                    async.bind(responseObject).resolve();
-                });
+        _resolveProxyResponse: function(self, promise, resolver) {
+            if (!promise.then) {
+                promise = core.Promise.resolve(promise);
             }
+            promise.then(function(response) {
+                var responseObject = {
+                    status: response[0],
+                    statusText: response[3] || self._defaultStatusText[response[0]],
+                    getResponseHeader: function(name) {
+                        var headers = response[2] || {};
+                        return headers[name];
+                    },
+                    responseText: pyscript.isString(response[1]) ?
+                        response[1] : JSON.stringify(response[1])
+                };
+
+                self._parseStatus(responseObject);
+                var proceed = self._triggerInterceptors('response', responseObject);
+
+                if (proceed) {
+                    resolver.resolve(responseObject);
+                }
+            });
         },
         _parseStatus: function(self, thisArg) {
             var status = thisArg.status;

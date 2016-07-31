@@ -1,13 +1,12 @@
-pyscript.defmodule('cache')
-
+pyscript.module('cache')
+    
     .__init__(function(self) {
-        self.onSyncSuccess = pyscript.noop;
-        self._storage = pyscript.dict();
+        self._storage = {};
     })
 
     .def({
         flush: function(self) {
-            self._storage.clear();
+            self._storage = {};
         },
         /**
          * Files that are uploaded from local will have their location hashed.
@@ -17,14 +16,20 @@ pyscript.defmodule('cache')
          * @param file  The File object that was chosen to be uploaded.
          */
         cacheFile: function(self, url, file) {
-            var async = pyscript.async();
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                self._storage[url] = {localUrl: e.target.result, file: file};
-                async.resolve(url, e.target.result);
-            };
-            reader.readAsDataURL(file);
-            return async.promise;
+            return new core.Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    var result = {url: url, localUrl: e.target.result, file: file};
+                    self._storage[url] = result;
+                    resolve(result);
+                };
+                reader.onerror = function(e) {
+                    reject(e);
+                };
+                
+                reader.readAsDataURL(file);
+            });
         },
         /**
          * Fetches a local url if one exists in the cache. Otherwise just returns
@@ -33,55 +38,32 @@ pyscript.defmodule('cache')
          * @param url   The remote url to check for.
          */
         fetchUrl: function(self, url) {
-            return self._storage.get(url, {localUrl: url}).localUrl;
-        },
-        /**
-         * Uploads all offline image files to the server.
-         */
-        syncAll: function(self) {
-            pyscript.map(self.syncFile, self._storage.keys());
-        },
-        /**
-         * Ignore things in cache which are not files
-         * @param self
-         * @param url {String}
-         */
-        syncFile: function(self, url) {
-            var cached = self._storage.get(url);
-            if (cached) {
-                var file = cached.file;
-                if (file) {
-                    pyscript.requests.upload(cached.url, file.file, file)
-                        .then(self.onSyncSuccess)
-                }
-            }
+            var value = self._storage[url];
+            return value ? value.localUrl : url;
         },
         fetch: function(self, url, parser) {
             pyscript.check(url, String);
 
-            var async = pyscript.async();
-
-            if (self._storage.contains(url)) {
-                pyscript.defer(function() {
-                    async.resolve({success: true, cached: true, url: url, parser: parser, result: self.get(url)});
-                });
-            }
-            else {
-                pyscript.requests.get(url)
-                    .then(function() {
-                        var context = {success: false, url: url, parser: parser};
-
-                        if (this.http.success) {
-                            var responseText = this.responseText || "";
-                            responseText = parser ? parser(responseText) : responseText;
-                            self._storage[url] = responseText;
-                            context.result = responseText;
-                            context.success = true;
-                        }
-                        async.resolve(context)
-                    })
-            }
-            return async.promise;
+            return new core.Promise(function(resolve, reject) {
+                if (self._storage[url]) {
+                    resolve({cached: true, url: url, parser: parser, result: self.get(url)});
+                }
+                else {
+                    pyscript.requests.get(url)
+                        .then(function(response) {
+                            if (response.http.success) {
+                                var result = response.responseText || "";
+                                result = parser ? parser(result) : result;
+                                resolve({cached: false, url: url, parser: parser, result: result});
+                            }
+                            else {
+                                reject(response);
+                            }
+                        }, function(response) {
+                            reject(response);
+                        })
+                }
+            });
         },
         /**
          * Change the key of existing local key.
@@ -95,7 +77,7 @@ pyscript.defmodule('cache')
             if (destKey == sourceKey) {
                 return;
             }
-            if (!self._storage.contains(sourceKey)) {
+            if (!self._storage[sourceKey]) {
                 throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
             }
             self._storage[destKey] = self._storage[sourceKey];
@@ -107,28 +89,16 @@ pyscript.defmodule('cache')
         },
         contains: function(self, key) {
             pyscript.check(key, String);
-            return self._storage.contains(key);
+            return !!self._storage[key];
         },
         store: function(self, key, value) {
             self._storage[key] = value;
         },
-        find: function(self, value) {
-            return self._storage.find(value);
-        },
         get: function(self, id, defaultValue) {
-            return self._storage.get(id, defaultValue);
+            return self._storage[id] || defaultValue;
         },
-        /**
-         * @returns {Array}
-         */
         keys: function(self) {
-            return self._storage.keys();
-        },
-        /**
-         * @returns {Array}
-         */
-        values: function(self) {
-            return self._storage.values();
+            return Object.keys(self._storage);
         }
     });
 

@@ -1,7 +1,13 @@
-window.pyscript = {modules: {}};
+window.pyscript = {modules: {}, _aliases: {}, _cache: {}};
 
 pyscript.defer = function(callback) {
     setTimeout(callback, 1);
+};
+
+pyscript.log = function() {
+    if (console && console.log && pyscript.debug) {
+        console.log.apply(null, Arguments);
+    }
 };
 
 pyscript.range = function(start, stop, step) {
@@ -76,6 +82,7 @@ pyscript.any = function(func, object) {
 };
 
 pyscript.partial = function(callback) {
+    pyscript.check(callback, Function);
     var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
     return function() {
         var more_args = [].slice.call(arguments);
@@ -83,191 +90,148 @@ pyscript.partial = function(callback) {
     }
 };
 
-(function() {
-    pyscript.mockDependencies = function(mapping) {
-        pyscript.assert(jasmine, "mockDependencies() must be called from Jasmine testing.");
-        spyOn(pyscript, '_getURL').and.callFake(function(url) {
-            if (mapping[url]) {
-                console.log("%c" + url + " overridden by " + mapping[url], "color:DodgerBlue;");
-                return getURL(mapping[url]);
-            }
-            return getURL(url);
-        });
-    };
-
-    pyscript._getURL = getURL;
-
-    function getURL(url) {
-        if (url.indexOf("://") != -1)
-            return url;
-        else return pyscript.prefix + url;
+pyscript.alias = function(url, value) {
+    var aliases = pyscript._aliases;
+    if (value) {
+        aliases[url] = value;
     }
-})();
+    if (aliases[url]) {
+        pyscript.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
+    }
+    var result = aliases[url] || url;
+    return result.indexOf("://") == -1 ? pyscript.base + result : result;
+};
 
-pyscript.import = function(tagName, props, callback) {
-    var element = document.createElement(tagName);
-    document.head.appendChild(element);
-    // Async may not be effective due to ajax protocols and queueing
-    element.onload = callback;
-    pyscript.extend(element, props);
-    return element;
+pyscript.import = function(url) {
+    url = pyscript.alias(url);
+    return new core.Promise(function(resolve, reject) {
+        if (pyscript._cache[url]) {
+            pyscript._cache[url].push({resolve: resolve, reject: reject});
+        }
+        else {
+            pyscript._cache[url] = [{resolve: resolve, reject: reject}];
+            var ext = url.split('.').pop();
+            var tag = ext == 'js' ? 'script' : 'link';
+            var props = ext == 'js' ? {src: url} : {href: url};
+            var element = document.createElement(tag);
+
+            document.head.appendChild(element);
+
+            element.onload = function() {
+                pyscript.log(url, "loaded.");
+                pyscript._cache[url].map(function(resolver) {
+                    resolver.resolve();
+                })
+            };
+            element.onerror = function() {
+                pyscript.log(url, "failed to loaded.");
+                pyscript._cache[url].map(function(resolver) {
+                    resolver.reject();
+                })
+            };
+            pyscript.extend(element, props);
+        }
+    });
 };
 
 pyscript.initialize = function(name) {
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var mod = all_modules[name];
+    var module = pyscript.modules[name];
 
-    if (mod) {
-        return mod._initialize();
+    if (module) {
+        return module._initialize();
     }
     else {
-        pyscript.assert("Module " + name + " is not defined!")
+        pyscript.assert(false, "Module " + name + " is not defined!")
     }
 };
 
 pyscript.module = function(name) {
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var result = all_modules[name];
-    return result ? result._instance : null;
-};
+    if (!pyscript.modules[name]) {
+        pyscript.modules[name] = {
+            __name__: name,
+            __initialized__: false,
+            __state__: "",
 
-pyscript.defmodule = function (name) {
-    var instance = pyscript.module(name);
-    if (!instance) {
-        instance = {__name__: name, __initialized__: false};
-        pyscript.modules[name] = instance;
-    }
-    var all_modules = window._py_all_modules = window._py_all_modules || {};
-    var cached_files = window._py_cached_files = window._py_cached_files || pyscript.dict();
+            _scripts: [],
+            _modules: [],
+            _callbacks: Array.from([])
+        };
 
-    if (all_modules[name])
-        return all_modules[name];
+        (function(module) {
 
-    // Define package in internal package cache
-    var self = all_modules[name] = {
-        __name__: name,
+            module.import = function(url) {
+                module._scripts.push(url);
+                return module;
+            };
 
-        _dependencies: [],
-        _modules: [],
-        _instance: instance,
-        _status: "",
-        _callbacks: pyscript.list(),
+            module.initialize = function(name) {
+                module._modules.push(name);
+                return module;
+            };
 
-        import: function(url) {
-            self._dependencies.push({url: url});
-            return self;
-        },
+            module.def = function(values) {
+                var modified = pyscript.map(function(callable, i) {
+                    return pyscript.partial(callable, module);
+                }, values);
 
-        initialize: function(name) {
-            self._modules.push(name);
-            return self;
-        },
+                pyscript.extend(module, modified);
 
-        def: function(values) {
-            var modified = pyscript.map(function(callable, i) {
-                if (pyscript.isFunction(callable)) {
-                    return pyscript.partial(callable, instance);
-                }
-                else pyscript.assert(false, "'" + i + "' cannot be set as a function of '" + name + "'");
+                return module;
+            };
 
-            }, values);
+            module.__init__ = function(callback) {
+                module._callbacks.push(callback);
+                return module;
+            };
 
-            pyscript.extend(instance, modified);
+            module.__new__ = function(callback) {
+                callback.call(null, module);
+                return module;
+            };
 
-            return self;
-        },
+            module._initialize = function() {
+                return new core.Promise(function(resolve, reject) {
 
-        __init__: function(callback) {
-            self._callbacks.push(callback);
-            return self;
-        },
-        __new__: function(callback) {
-            callback.call(null, instance);
-            return self;
-        },
-        _initialize: function() {
-            var async = pyscript.async();
-
-            if (self._status == "loaded") {
-                pyscript.defer(function() {async.resolve(instance)});
-                return async.promise;
-            }
-            else if (self._status == "loading") {
-                self._callbacks.push(function() {
-                    async.resolve(instance);
+                    switch(module.__state__) {
+                        case 'loaded':
+                            resolve(module);
+                            break;
+                        case 'loading':
+                            module.__init__(resolve);
+                            break;
+                        default:
+                            pyscript.log("%c" + name + " loading...", "color:DodgerBlue;");
+                            module.__state__ = 'loading';
+                            importScripts(module._scripts)
+                                .then(function() {
+                                    initializeModules(module._modules)
+                                        .then(function() {
+                                            pyscript.log("%c" + name + " loaded", "font-weight:bold;");
+                                            module.__initialized__ = true;
+                                            module.__state__ = 'loaded';
+                                            module._callbacks.forEach(function(cb) {
+                                                cb.call(null, module);
+                                            });
+                                        }, reject);
+                                }, reject);
+                    }
                 });
-                return async.promise;
-            }
-            else if (pyscript.debug) console.log("%c" + name + " loading...", "color:DodgerBlue;");
+            };
 
-            self._status = "loading";
-            var loaded_count = 0;
+        }(pyscript.modules[name]));
+    }
+    
+    return pyscript.modules[name];
 
-            function load_next() {
-                var dependencies = self._dependencies;
 
-                if (dependencies.length == loaded_count) {
-                    load_next_module();
-                }
-                else if (loaded_count < dependencies.length) {
-                    var url = dependencies[loaded_count].url;
-                    if (cached_files[url] !== undefined) {
-                        loaded_count++;
-                        load_next();
-                    }
-                    else {
-                        cached_files[url] = false;
-                        pyscript.import("script", {src: pyscript._getURL(url)},
-                            function() {
-                                if (pyscript.debug) console.log(url, "loaded");
-                                cached_files[url] = true;
-                                loaded_count++;
-                                load_next();
-                            }, true);
-                    }
-                }
-            }
+    function importScripts(scripts) {
+        return core.Promise.all(scripts.map(pyscript.import));
+    }
 
-            var loaded_modules_count = 0;
-            function load_next_module() {
-                if (self._modules.length == loaded_modules_count) {
-                    // Defer to next frame, as success callback may not be registered yet.
-                    pyscript.defer(function() {
-                        self._status = "loaded";
-
-                        self._callbacks.each(function(cb) {
-                            cb.call(null, instance);
-                        });
-
-                        async.resolve(instance);
-                        if (pyscript.debug) console.log("%c" + name + " loaded", "font-weight:bold;");
-
-                        instance.__initialized__ = true;
-                    });
-                }
-                else {
-                    var target = self._modules[loaded_modules_count];
-
-                    if (all_modules[target] === undefined) {
-                        pyscript.assert(false, "", "Module '" + target+ "' is not defined!");
-                    }
-                    else {
-                        pyscript.initialize(target)
-                            .then(function() {
-                                loaded_modules_count++;
-                                load_next_module();
-                            });
-                    }
-                }
-            }
-
-            load_next();  // Get the party started!
-
-            return async.promise;
-        }
-    };
-    return self;
+    function initializeModules(modules) {
+        return core.Promise.all(modules.map(pyscript.initialize));
+    }
 };
 
 pyscript.debug = true;
-pyscript.prefix = '';
+pyscript.base = '';

@@ -13,18 +13,13 @@ describe('cache.module', function () {
 
     it('should move cached keys to another key', function() {
         pyscript.cache.store("keyA", "");
+        console.log(pyscript.cache._storage);
         expect(pyscript.cache.get("keyA")).toBe("");
         pyscript.cache.move("keyA", "keyB");
         expect(pyscript.cache.get("keyA")).toBeUndefined();
         expect(pyscript.cache.get("keyB")).toBe("");
         pyscript.cache.move("keyB", "keyB");
         expect(pyscript.cache.get("keyB")).toBe("");
-    });
-
-
-    it('should find item by value', function() {
-        pyscript.cache.store("keyV", "valueV");
-        expect(pyscript.cache.find("valueV")).toBe("keyV");
     });
 
 
@@ -38,9 +33,8 @@ describe('cache.module', function () {
     });
 
 
-    it('should get values and keys', function() {
+    it('should get keys', function() {
         pyscript.cache.store("keyZ", "one");
-        expect(pyscript.cache.values()).toEqual(["one"]);
         expect(pyscript.cache.keys()).toEqual(["keyZ"]);
     });
 
@@ -59,7 +53,6 @@ describe('cache.module', function () {
             function(a) { return a + "--server-parsing" })
             .then(function(value) {
                 expect(value.result).toBe("one");
-                expect(value.success).toBe(true);
                 expect(value.cached).toBe(true);
                 done();
             });
@@ -88,17 +81,6 @@ describe('cache.module', function () {
                 });
 
             expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
-        });
-
-
-        it('should upload file when calling syncFile()', function() {
-            pyscript.requests.mockSetup();
-
-            pyscript.cache.store("keyZ", {url: "awesomeUrl", file: {file: "fileData"}});
-            pyscript.cache.syncFile("keyZ");
-
-            expect(pyscript.requests.upload).toHaveBeenCalledWith(
-                'awesomeUrl', "fileData", {file: "fileData"});
         });
     });
 });

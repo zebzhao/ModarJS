@@ -33,8 +33,8 @@ describe('requests.module', function () {
             return {responseText: "nice-response"};
         });
 
-        requests.get(testUrl).then(function() {
-            expect(this.responseText).toBe("nice-response");
+        requests.get(testUrl).then(function(response) {
+            expect(response.responseText).toBe("nice-response");
             done();
         });
     });
@@ -107,10 +107,10 @@ describe('requests.module', function () {
 
     it('should resolve promise on proxy response', function(done) {
         pyscript.requests.whenPUT(/resolve\-proxy\-promise/, function() { return [200, {}]});
-        pyscript.requests.put('/resolve\-proxy\-promise', {}).then(function() {
-            expect(this.responseText).toBe('{}');
-            expect(this.status).toBe(200);
-            expect(this.statusText).toBe('OK');
+        pyscript.requests.put('/resolve\-proxy\-promise', {}).then(function(response) {
+            expect(response.responseText).toBe('{}');
+            expect(response.status).toBe(200);
+            expect(response.statusText).toBe('OK');
             done();
         });
     })

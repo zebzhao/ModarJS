@@ -38,9 +38,14 @@
             }
             else if (module.isObject(schema)) {
                 module.check(obj, Object);
-                for (var k in schema) {
-                    if (schema.hasOwnProperty(k))
-                        module.check(obj[k], schema[k]);
+                try {
+                    for (var k in schema) {
+                        if (schema.hasOwnProperty(k))
+                            module.check(obj[k], schema[k]);
+                    }
+                }
+                catch (e) {
+                    pyscript.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
             }
         },
