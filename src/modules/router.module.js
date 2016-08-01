@@ -21,16 +21,16 @@ pyscript.module('router')
                 return window.location.pathname;
             }
         };
-
-        window.addEventListener("hashchange", function() {
-            self._onchange.call(self);
-        });
     })
 
     .__init__(function(self) {
         self._routes = {};
         self._params = {};
         self._promises = [];
+
+        window.addEventListener("hashchange", function() {
+            self._onchange.call(self);
+        });
     })
 
     .def({

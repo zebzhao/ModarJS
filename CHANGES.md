@@ -3,6 +3,17 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.7.0
+-----------
+- overhauled Promise implementation to be ES6 compliant
+- new es6 promise class, from corejs, accessed with `core.Promise`
+- new es6 array polyfill
+- removed: `pyscript.async`, `pyscript.list`, `pyscript.dict`
+- changed ajax request this binding to be in args
+- renamed: `pyscript.defmodule` -> `pyscript.module`
+- renamed: `module.initialize` -> `module.require`
+- parallel script loading implemented for `module.import`
+
 Version 0.2.5
 -----------
 - added: `str.split` now mimicks python string split
