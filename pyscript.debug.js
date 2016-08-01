@@ -6,7 +6,7 @@ pyscript.defer = function(callback) {
 
 pyscript.log = function() {
     if (console && console.log && pyscript.debug) {
-        console.log.apply(null, arguments);
+        console.log.apply(console, arguments);
     }
 };
 
@@ -118,16 +118,17 @@ pyscript.import = function(url) {
             document.head.appendChild(element);
 
             element.onload = function() {
+                var $this = this;
                 pyscript.log(url, "loaded.");
                 pyscript._cache[url].map(function(resolver) {
-                    resolver.resolve();
-                })
+                    resolver.resolve($this);
+                });
             };
             element.onerror = function() {
                 pyscript.log(url, "failed to loaded.");
                 pyscript._cache[url].map(function(resolver) {
-                    resolver.reject();
-                })
+                    resolver.reject('Failed to load ' + url);
+                });
             };
             pyscript.extend(element, props);
         }
