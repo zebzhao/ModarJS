@@ -239,11 +239,10 @@ pyscript.debug = true;
 pyscript.base = '';
 (function(module) {
     module.extend(module, {
-        assert: function(cond, message, log) {
+        assert: function(cond) {
             if (!cond) {
-                if (log) console.log(log);
+                console.error.apply(console, [].slice.call(arguments).slice(1));
                 debugger;
-                throw new Error(message);
             }
         },
         check: function(obj, schema) {
