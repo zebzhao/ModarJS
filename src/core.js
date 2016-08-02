@@ -111,7 +111,7 @@ pyscript.import = function(url) {
         else {
             pyscript._cache[url] = [{resolve: resolve, reject: reject}];
             var noQuery = url.split('?').shift();
-            var ext = noQuery.split('.').pop();
+            var ext = noQuery.split('.').pop().toLowerCase();
             var tag = ext == 'js' ? 'script' : 'link';
             var props = ext == 'js' ? {src: url} : {href: url};
             var element = document.createElement(tag);
