@@ -74,7 +74,7 @@ pyscript.hotkeys
 Modules can be loaded and then initialized. A module can be loaded from by using:
 
 ```javascript
-pyscript.import(url, callback)
+pyscript.import(url).then(callback);
 ```
 
 This will append either a `<script>` or `<link>` tag depending on if a '.js' file is included.
@@ -375,15 +375,15 @@ To redirect the page:
 
 ```javascript
 // do this
-pyscript.defmodule('mymodule')
-    .initialize('router')
+pyscript.module('mymodule')
+    .require('router')
     .__init__(function(self) {
         pyscript.router.proxy.setHref("www.example.com/new/location");
     });
 
 // instead of this
-pyscript.defmodule('mymodule')
-    .initialize('router')
+pyscript.module('mymodule')
+    .require('router')
     .__init__(function(self) {
         window.location.href = "www.example.com/new/location";
     });
