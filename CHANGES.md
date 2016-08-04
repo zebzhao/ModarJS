@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.7.1
+-----------
+- fixed: `pyscript.cache.fetch` not actually caching
+
 Version 0.7.0
 -----------
 - overhauled Promise implementation to be ES6 compliant
