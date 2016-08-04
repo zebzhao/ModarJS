@@ -6,7 +6,7 @@ var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
 
 gulp.task('build', function() {
-    return gulp.src(['src/core.js', 'src/*.js',
+    return gulp.src(['src/core.js', 'src/*.js', 'src/vendor/*.js',
         'src/modules/*.js', '!**/*.spec.js'])
         .pipe(concat('pyscript.min.js'))
         .pipe(uglify())
@@ -14,7 +14,7 @@ gulp.task('build', function() {
 });
 
 gulp.task('build-debug', function() {
-    return gulp.src(['src/core.js', 'src/*.js',
+    return gulp.src(['src/core.js', 'src/*.js', 'src/vendor/*.js',
         'src/modules/*.js', '!**/*.spec.js'])
         .pipe(concat('pyscript.debug.js'))
         .pipe(gulp.dest('.'))

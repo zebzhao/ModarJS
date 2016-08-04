@@ -51,11 +51,33 @@ describe('pyscript', function () {
     });
 
 
-    it('should mock dependencies', function() {
-        spyOn(pyscript, 'import');
-        pyscript.mockDependencies({"testUrl": "newUrl"});
-        pyscript.defmodule('testmod').import('testUrl');
-        pyscript.initialize('testmod');
-        expect(pyscript.import.calls.mostRecent().args[1]).toEqual({src: "newUrl"});
+    it('should load requests', function(done) {
+        pyscript.initialize('requests').then(function() {
+            done();
+        });
+    });
+
+
+    it('should handle duplicate loading', function(done) {
+        var initCount = 0;
+        pyscript.module('dup1').__init__(function() {
+            initCount++;
+        });
+        pyscript.initialize('dup1').then(function() {
+            // This was called first, will initiate actual loading.
+            initCount++;
+            expect(initCount).toBe(3);
+            done();
+        });
+        pyscript.initialize('dup1').then(function() {
+            initCount++;
+        });
+    });
+
+
+    it('should handle aliasing', function() {
+        pyscript.alias('http://bull.js', 'cow.js');
+        pyscript.import('http://bull.js');
+        expect(document.head.getElementsByTagName('script')[0].getAttribute('src')).toBe('cow.js');
     });
 });

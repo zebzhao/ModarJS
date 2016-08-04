@@ -1,10 +1,9 @@
 (function(module) {
     module.extend(module, {
-        assert: function(cond, message, log) {
+        assert: function(cond) {
             if (!cond) {
-                if (log) console.log(log);
+                console.error.apply(console, [].slice.call(arguments).slice(1));
                 debugger;
-                throw new Error(message);
             }
         },
         check: function(obj, schema) {
@@ -38,9 +37,14 @@
             }
             else if (module.isObject(schema)) {
                 module.check(obj, Object);
-                for (var k in schema) {
-                    if (schema.hasOwnProperty(k))
-                        module.check(obj[k], schema[k]);
+                try {
+                    for (var k in schema) {
+                        if (schema.hasOwnProperty(k))
+                            module.check(obj[k], schema[k]);
+                    }
+                }
+                catch (e) {
+                    pyscript.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
             }
         },

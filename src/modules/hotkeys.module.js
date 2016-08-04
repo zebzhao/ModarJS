@@ -1,4 +1,5 @@
-pyscript.defmodule('hotkeys')
+pyscript.module('hotkeys')
+    
     .__new__(function(self) {
         self.scope = 'all';
 

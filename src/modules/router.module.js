@@ -1,4 +1,4 @@
-pyscript.defmodule('router')
+pyscript.module('router')
 
     .__new__(function(self) {
         self.proxy = {
@@ -21,16 +21,16 @@ pyscript.defmodule('router')
                 return window.location.pathname;
             }
         };
-
-        window.addEventListener("hashchange", function() {
-            self._onchange.call(self);
-        });
     })
 
     .__init__(function(self) {
         self._routes = {};
         self._params = {};
         self._promises = [];
+
+        window.addEventListener("hashchange", function() {
+            self._onchange.call(self);
+        });
     })
 
     .def({
@@ -133,15 +133,17 @@ pyscript.defmodule('router')
         },
         go: function (self, uri, force) {
             pyscript.check(uri, String);
-            var async = pyscript.async();
-            self._promises.push(async);
+
+            var promise = new core.Promise(function(resolve, reject) {
+                self._promises.push({resolve: resolve, reject: reject});
+            });
 
             self.proxy.setHash(uri + this.asQueryString(self._params));
 
             if (force)
                 self.refresh();
 
-            return async.promise;
+            return promise;
         },
         query: function (self, params) {
             pyscript.check(params, Object);

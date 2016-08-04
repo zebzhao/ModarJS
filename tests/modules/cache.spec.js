@@ -22,12 +22,6 @@ describe('cache.module', function () {
     });
 
 
-    it('should find item by value', function() {
-        pyscript.cache.store("keyV", "valueV");
-        expect(pyscript.cache.find("valueV")).toBe("keyV");
-    });
-
-
     it('should delete cached key', function() {
         pyscript.cache.store("keyB", "test");
         expect(pyscript.cache.get("keyB")).toBe("test");
@@ -38,9 +32,8 @@ describe('cache.module', function () {
     });
 
 
-    it('should get values and keys', function() {
+    it('should get keys', function() {
         pyscript.cache.store("keyZ", "one");
-        expect(pyscript.cache.values()).toEqual(["one"]);
         expect(pyscript.cache.keys()).toEqual(["keyZ"]);
     });
 
@@ -59,7 +52,6 @@ describe('cache.module', function () {
             function(a) { return a + "--server-parsing" })
             .then(function(value) {
                 expect(value.result).toBe("one");
-                expect(value.success).toBe(true);
                 expect(value.cached).toBe(true);
                 done();
             });
@@ -68,37 +60,21 @@ describe('cache.module', function () {
 
     describe('cache.module fetch', function() {
         beforeEach(function(done) {
-            pyscript.initialize('requests').then(function() {
+            pyscript.initialize('requests').then(function(requests) {
+                requests.whenGET(/cachekeyZ/, function() {
+                    return [200, "Awesome"];
+                });
                 done();
             });
         });
 
         it('should fetch values from server', function(done) {
-            pyscript.requests.mockSetup();
-
-            pyscript.requests.mockServer.defRoute("GET", "keyZ", function() {
-                return {responseText: "Awesome", http: {success: true}};
-            });
-
-            pyscript.cache.fetch("keyZ",
+            pyscript.cache.fetch("cachekeyZ",
                 function(value) { return value + ":Parsed"; })
                 .then(function(context) {
                     expect(context.result).toBe("Awesome:Parsed");
                     done();
                 });
-
-            expect(pyscript.requests.get).toHaveBeenCalledWith('keyZ');
-        });
-
-
-        it('should upload file when calling syncFile()', function() {
-            pyscript.requests.mockSetup();
-
-            pyscript.cache.store("keyZ", {url: "awesomeUrl", file: {file: "fileData"}});
-            pyscript.cache.syncFile("keyZ");
-
-            expect(pyscript.requests.upload).toHaveBeenCalledWith(
-                'awesomeUrl', "fileData", {file: "fileData"});
         });
     });
 });

@@ -6,8 +6,10 @@ module.exports = function(config){
         logLevel: config.LOG_DEBUG,
 
         files : [
-            {pattern: 'pyscript.debug.js', watched: true, included: true, served: true},
-            {pattern: '**/*.spec.js', watched: true, included: true, served: true}
+            'src/vendor/core.js',
+            'src/core.js',
+            {pattern: 'src/**/*.js', watched: true, included: true, served: true},
+            {pattern: 'tests/**/*.spec.js', watched: true, included: true, served: true}
         ],
 
         exclude : [
@@ -16,7 +18,8 @@ module.exports = function(config){
         reporters: ['progress', 'coverage'],
 
         preprocessors: {
-            'pyscript.debug.js': ['coverage']
+            'src/modules/*.js': ['coverage'],
+            'src/*.js': ['coverage']
         },
 
         // web server port
