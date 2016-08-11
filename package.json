@@ -1,6 +1,6 @@
 {
   "name": "PyScript",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A package loading library that mocks Python modules.",
   "main": "",
   "private": false,

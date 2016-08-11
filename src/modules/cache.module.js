@@ -54,6 +54,7 @@ pyscript.module('cache')
                             if (response.http.success) {
                                 var result = response.responseText || "";
                                 result = parser ? parser(result) : result;
+                                self.store(url, result);
                                 resolve({cached: false, url: url, parser: parser, result: result});
                             }
                             else {

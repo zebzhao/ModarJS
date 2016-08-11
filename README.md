@@ -18,6 +18,7 @@ Table of Contents
 
 1. [Defining modules](#defining-modules)
 1. [Loading modules](#loading-modules)
+1. [Partial module definition](#partial-module-definition)
 1. [Initializing modules](#initializing-modules)
 1. [Defining Module Methods](#defining-module-methods)
 1. [Special Properties](#special-properties)
@@ -41,17 +42,26 @@ For production
 
 ## Defining modules
 
-Modules are like python modules and can contain definitions of functions and variables.
+Modules and can contain definitions of functions and variables, also provides entry point after module
+dependencies are loaded.
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
+    .import('https://example.com/random.css')
+    .import('path/to/file/random.js')
+    .require('dependency')
 ```
+
 To access the module one can use a function call, or access it through a variable:
+
 ```javascript
 pyscript.module('mymodule')
 // which is the same as:
-pyscript.modules['mymodule']
+pyscript.modules.mymodule
 ```
-There are also standard modules which can be accessed this way:
+
+There are also standard modules which can be accessed directly on the `pyscript` object:
+
 ```javascript
 // List of standard modules included with PyScript
 pyscript.requests
@@ -62,52 +72,82 @@ pyscript.hotkeys
 
 ## Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
+
 ```javascript
-pyscript.import('SCRIPT', 'mymodule.js', callback)
+pyscript.import(url).then(callback);
 ```
-When a module is loaded, its `__new__` method is automatically invoked.
+
+This will append either a `<script>` or `<link>` tag depending on if a '.js' file is included.
+When a module is defined, its `__new__` method is automatically immediately called.
+Note that `self` refers to the module (same as `pyscript.module.mymodule` in the case below).
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
     .__new__(function(self) {
-        console.log('I am loaded!');
-        self.loaded = true;
-        // Do stuff when module gets loaded.
+        // Do stuff immediately.
         // ...
     });
 ```
-Note that multiple `__new__` functions can be defined, and will be invoked in the defined order:
+Note that multiple `__new__` callback functions can be defined, and they will be called in the defined order:
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
     .__new__(function(self) {
         console.log('I am first')
     })
     .__new__(function(self) {
         console.log('I am second')
     });
+```
 
+## Partial module definition
+
+```javascript
 // A module defined again will refer to the original defined module.
-pyscript.defmodule('mymodule')
+// This allows module definitions to be split between many files.
+pyscript.module('mymodule')
     .__new__(function(self) {
         console.log('I am third')
     });
 ```
 
 ## Initializing modules
-After a module is loaded, it needs to be initialized. To initialize a module:
+After a module is loaded, it needs to be initialized.
+Initializing will load all dependencies. The initialization process has 2 steps:
+
+1. Import all files defined by `.import`.
+2. After imports are successful, initialize required modules defined by `.require`.
+
+To initialize a module manually:
+
 ```javascript
-pyscript.initialize('mymodule')
+pyscript.module('mymodule');
+// This can be called anywhere after the module definition.
+pyscript.initialize('mymodule');
 ```
-When a module is initialized, its `__init__` method is automatically invoked.
-Additionally, any dependencies that were defined for the module are also loaded.
+
+To initialize a module as a requirement by another module initialization process:
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('child')
+    .import('path/to/modules/mother.js')
+    .require('mother');
+```
+
+When a module is initialized, its `__init__` method is automatically called.
+The `__init__` method(s) are called after dependencies are loaded.
+
+```javascript
+pyscript.module('mymodule')
     .__init__(function(self) {
         console.log('I am initialized')
     });
 ```
-Similarly, when defining multiple `__init__` handlers, the same rules apply as `__new__`.
+
+Similarly to `__new__`, when defining multiple `__init__` callbacks, they are called in the order of definition.
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
     .__init__(function(self) {
         self.a = 5;
     })
@@ -116,64 +156,66 @@ pyscript.defmodule('mymodule')
         console.log(self.a); // Outputs 6
     });
 ```
+
 When a module is initialized, its dependencies will be loaded.
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
     .import('jquery.min.js')
     .import('angular.min.js')
     .import('https://example.com/script.js');
 
-// Dependencies will be loaded in order, 1 after another.
+// Dependencies will be loaded asynchronously (all at the same time).
 pyscript.initialize('mymodule');
 ```
 
-Loading submodules can also be done. In the scenario that you have 1 module that relies on another module:
+An example on requiring modules. In the scenario below that you have 1 module that relies on another module:
 ```javascript
-// Inside submodule.module.js
-pyscript.defmodule('submodule')
+// Inside mother.module.js
+pyscript.module('mother')
     .__init__(function(self) {
         console.log('I will be initialized and loaded FIRST!')
     });
 
-// Inside mymodule.module.js
-pyscript.defmodule('mymodule')
-    .import('submodule.module.js')
-    .initialize('submodule')  // Also initialize the submodule when this is initialized.
+// Inside child.module.js
+pyscript.module('child')
+    .import('mother.module.js')
+    .require('mother')
 
     .__init__(function(self) {
-        console.log('I am initialized AFTER submodule.')
+        console.log('I am initialized AFTER mother.')
     });
 ```
+
 In the case that your submodule has very large dependencies and needs to be loaded in a future point in time:
+
 ```javascript
-// Inside submodule.module.js
-pyscript.defmodule('submodule')
+// Inside bigmodule.module.js
+pyscript.module('bigmodule')
     .import('very-large-file.js')
     .__init__(function(self) {
-        // Also import some CSS files upon initialization
-        pyscript.import('LINK', {href: "big-css-1.css"});
-        pyscript.import('LINK', {href: "big-css-2.css"});
-        pyscript.import('LINK', {href: "big-css-3.css"});
+        // do stuff
     });
 
 // Inside mymodule.module.js
-pyscript.defmodule('mymodule')
-    .import('submodule.module.js')
-    .initialize('router')   // Load standard module 'router'
+pyscript.module('mymodule')
+    .import('bigmodule.module.js')
+    .require('router')   // Load standard module 'router'
     
     .__init__(function(self) {
         pyscript.router
-            .route('submodule', function() {
-                // Initialize submodule when hitting mydomain.com/#submodule
-                pyscript.initialize('submodule');
+            .route('bigmodule', function() {
+                // Initialize bigmodule when hitting mydomain.com/#bigmodule
+                pyscript.initialize('bigmodule');
             });
     });
 ```
 
 ## Defining Module Methods
+
 Methods can be defined in a module in the following way:
+
 ```javascript
-pyscript.defmodule('mymodule')
+pyscript.module('mymodule')
     .def({
         testMethod1: function(self, string) {
         }),
@@ -183,13 +225,15 @@ pyscript.defmodule('mymodule')
     });
 pyscript.modules['mymodule'].callsMethod1('Awesome');
 ```
-Note that the methods are defined on the module instance and injected with a self argument.
-The self argument is a reference to the module instance.
+
+Note that the methods are defined on the module instance and injected with a `self` argument.
+The `self` argument is a reference to the module singleton instance.
 
 ## Special Properties
 Additional properties that are defined on top of module instances.
 
- * `__name__` - name of module defined by `defmodule(name)`
+ * `__name__` - name of module defined by `module(name)`
+ * `__state__` - `'loading'` or `'loaded'` or `undefined`
  * `__initialized__` - true only when the module has finished initializing
  
 Standard modules
@@ -198,10 +242,10 @@ Standard modules
 To use a standard module, you need to first initialize it. Note that standard modules do not need to be loaded as they
 are included with PyScript.
 ```javascript
-pyscript.defmodule('mymodule')
-    .initialize('hotkeys')
+pyscript.module('mymodule')
+    .require('hotkeys')
     .__init__(function(self) {
-        pyscript.module('hotkeys').addKey('ctrl-f', function(e, handler) {
+        pyscript.hotkeys.addKey('ctrl-f', function(e, handler) {
             e.preventDefault(); // Prevents browser default for this shortcut
             console.log('Ctrl-F was pressed!');
         });
@@ -228,16 +272,19 @@ pyscript.hotkeys.addKey('ctrl-f', function(e, handler) {
 ```javascript
 // Standard get request, with authorization header
 pyscript.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
-    .then(function() {
-        console.log('RESPONSE', this.responseText);
+    .then(function(response) {
+        console.log('RESPONSE', response.responseText);
     })
 // Synchronous call
 var xhr = pyscript.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
 console.log(xhr.responseText);
 // Uploading files
 pyscript.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
-    .then(function() {
-        console.log(this.responseText);
+    .then(function(response) {
+        console.log(response.responseText);
+        if (!response.http.success) {
+            return core.Promise.reject('failed');  // ES6 promise library
+        }
     });
 ```
 
@@ -262,6 +309,7 @@ Sometimes you want to use CDNs, but this introduces problems when testing locall
 PyScript solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
 
 Here's an example of how this works:
+
 ```javascript
 pyscript.prefix = '/home/user/project';  // Tells the headless browser to local path
 pyscript.prefix = 'C://path/to/project/folder';  // For Windows
@@ -284,7 +332,8 @@ describe('mymodule', function () {
 ```
 
 ### Requests
-A fake server with responses can be completely mocked out for Jasmine 2.0 unit tests.
+A fake server with responses can be completely mocked out.
+
 ```javascript
 describe('mymodule', function () {
     beforeEach(function(done) {
@@ -299,19 +348,18 @@ describe('mymodule', function () {
     // Sets up server routes
     beforeEach(function(done) {
         pyscript.requests
-            .defRoute("GET", "www.example.com/myroute", function(url, params, headers, async) {
-                return {responseText: '["Raw JSON array"]', http: {success:true}};
+            .whenGET(/www.example.com\/myroute/, function(params, config) {
+                return [200, "Raw JSON array"];
             })
-            .defRoute("DELETE", "www.example.com/myroute", function(url, params, headers, async) {
-                return {http: {success:true}};
+            .whenDELETE(/www.example.com\/myroute/, function(params, config) {
+                return [200, ""];
             })
-            .defRoute("POST", "www.example.com/myroute", function(url, params, payload, headers, async) {
-                return {http: {success:true}};
+            .whenPOST(/www.example.com\/myroute/, function(params, config) {
+                return [200, ""];
             });
     });
     
     it('should make server requests', function() {
-        pyscript.requests.mockSetup();
         this.mymodule.doSomething();
     });
 });
@@ -324,17 +372,18 @@ This is sometimes not debuggable as you have no idea where it may be called. Oth
 `pyscript.router` solves this problem by providing a `mockSetup()` method in Jasmine testing which allows page reloading to be handled properly.
 
 To redirect the page:
+
 ```javascript
 // do this
-pyscript.defmodule('mymodule')
-    .initialize('router')
+pyscript.module('mymodule')
+    .require('router')
     .__init__(function(self) {
         pyscript.router.proxy.setHref("www.example.com/new/location");
     });
 
 // instead of this
-pyscript.defmodule('mymodule')
-    .initialize('router')
+pyscript.module('mymodule')
+    .require('router')
     .__init__(function(self) {
         window.location.href = "www.example.com/new/location";
     });
@@ -342,6 +391,7 @@ pyscript.defmodule('mymodule')
 
 During tests the following will throw a proper error.
 The refresh error can also be fully suppressed and page refreshes will be ignored.
+
 ```javascript
 describe('mymodule', function () {
     beforeEach(function(done) {
