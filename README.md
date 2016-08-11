@@ -102,7 +102,7 @@ pyscript.module('mymodule')
 
 ## Partial module definition
 
-```
+```javascript
 // A module defined again will refer to the original defined module.
 // This allows module definitions to be split between many files.
 pyscript.module('mymodule')
