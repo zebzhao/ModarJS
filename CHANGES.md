@@ -3,6 +3,10 @@ PyScript Changelog
 
 Here you can see the full list of changes between each PyScript release.
 
+Version 0.7.2
+-----------
+- fixed: `router.query` now saves previous query params (expected behavior)
+
 Version 0.7.1
 -----------
 - fixed: `pyscript.cache.fetch` not actually caching

@@ -125,7 +125,7 @@ pyscript.module('router')
         asQueryString: function(self, params) {
             var result = "?";
             for (var name in params) {
-                if (params.hasOwnProperty(name) && params[name]) {
+                if (params.hasOwnProperty(name) && params[name] !== undefined) {
                     result += name + "=" + encodeURIComponent(params[name]) + "&";
                 }
             }
@@ -147,9 +147,9 @@ pyscript.module('router')
         },
         query: function (self, params) {
             pyscript.check(params, Object);
-            self._params = params;
             var queryParams = self.parseQuery();
             pyscript.extend(queryParams, params);
+            self._params = queryParams;
             self.proxy.setHref(self.proxy.getHref().split("?")[0] + self.asQueryString(self._params));
         },
         redirect: function(self, pathname) {
