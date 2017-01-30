@@ -2986,7 +2986,7 @@ pyscript.module('router')
             var query = [];
             if (hash.indexOf("?")) {
                 query = hash.slice(2).split("?");
-                query = query[query.length-1].split("&");
+                query = query.length == 2 ? query[1].split('&') : [];
             }
             var queryParams = {};
             var valuePair;
