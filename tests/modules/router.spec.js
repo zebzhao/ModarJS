@@ -52,4 +52,22 @@ describe('router.module', function () {
         });
         pyscript.router.go('/route');
     });
+
+    it('should parse query from router', function() {
+        expect(pyscript.router.asQueryString(
+            {a: 600, b: undefined, c: 0, d: false})).toBe("?a=600&c=0&d=false");
+        window.location.hash = '?a=600&c=0&d=false';
+        expect(pyscript.router.parseQuery('?a=600&c=0&d=false')).toEqual({a: '600', c: '0', d: 'false'});
+        expect(pyscript.router.parseQuery()).toEqual({a: '600', c: '0', d: 'false'});
+    });
+
+    it('should query', function() {
+        window.location.hash = '';
+        pyscript.router.query({a: 1});
+        expect(window.location.hash).toBe('#?a=1');
+        pyscript.router.query({b: 1, c: 0});
+        expect(window.location.hash).toBe('#?a=1&b=1&c=0');
+        pyscript.router.query({a: undefined, c: undefined});
+        expect(window.location.hash).toBe('#?b=1');
+    });
 });

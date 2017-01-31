@@ -107,12 +107,12 @@ pyscript.module('router')
             // Clear resolved promises
             self._promises = [];
         },
-        parseQuery: function(self) {
-            var hash = self.proxy.getHash();
+        parseQuery: function(self, queryString) {
+            var hash = queryString || self.proxy.getHash();
             var query = [];
-            if (hash.indexOf("?")) {
-                query = hash.slice(2).split("?");
-                query = query.length == 2 ? query[1].split('&') : [];
+            var querySeparatorIndex = hash.indexOf("?");
+            if (querySeparatorIndex != -1) {
+                query = hash.slice(querySeparatorIndex+1).split('&');
             }
             var queryParams = {};
             var valuePair;
@@ -148,7 +148,9 @@ pyscript.module('router')
         query: function (self, params) {
             pyscript.check(params, Object);
             var queryParams = self.parseQuery();
-            pyscript.extend(queryParams, params);
+            for (var name in params) {
+                if (params.hasOwnProperty(name)) queryParams[name] = params[name];
+            }
             self._params = queryParams;
             self.proxy.setHref(self.proxy.getHref().split("?")[0] + self.asQueryString(self._params));
         },
