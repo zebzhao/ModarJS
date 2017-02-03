@@ -8,7 +8,7 @@ var concat = require('gulp-concat');
 gulp.task('build', function() {
     return gulp.src(['src/core.js', 'src/*.js', 'src/vendor/*.js',
         'src/modules/*.js', '!**/*.spec.js'])
-        .pipe(concat('pyscript.min.js'))
+        .pipe(concat('modar.min.js'))
         .pipe(uglify())
         .pipe(gulp.dest('.'));
 });
@@ -16,7 +16,7 @@ gulp.task('build', function() {
 gulp.task('build-debug', function() {
     return gulp.src(['src/core.js', 'src/*.js', 'src/vendor/*.js',
         'src/modules/*.js', '!**/*.spec.js'])
-        .pipe(concat('pyscript.debug.js'))
+        .pipe(concat('modar.debug.js'))
         .pipe(gulp.dest('.'))
 });
 

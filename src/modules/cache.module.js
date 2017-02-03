@@ -1,4 +1,4 @@
-pyscript.module('cache')
+modar.module('cache')
     
     .__init__(function(self) {
         self._storage = {};
@@ -42,14 +42,14 @@ pyscript.module('cache')
             return value ? value.localUrl : url;
         },
         fetch: function(self, url, parser) {
-            pyscript.check(url, String);
+            modar.check(url, String);
 
             return new core.Promise(function(resolve, reject) {
                 if (self._storage[url]) {
                     resolve({cached: true, url: url, parser: parser, result: self.get(url)});
                 }
                 else {
-                    pyscript.requests.get(url)
+                    modar.requests.get(url)
                         .then(function(response) {
                             if (response.http.success) {
                                 var result = response.responseText || "";
@@ -71,8 +71,8 @@ pyscript.module('cache')
          * @param destKey {String}
          */
         move: function(self, sourceKey, destKey) {
-            pyscript.check(destKey, String);
-            pyscript.check(sourceKey, String);
+            modar.check(destKey, String);
+            modar.check(sourceKey, String);
             if (destKey == sourceKey) {
                 return;
             }
@@ -83,11 +83,11 @@ pyscript.module('cache')
             delete self._storage[sourceKey];
         },
         delete: function(self, url) {
-            pyscript.check(url, String);
+            modar.check(url, String);
             delete self._storage[url];
         },
         contains: function(self, key) {
-            pyscript.check(key, String);
+            modar.check(key, String);
             return self._storage[key] !== undefined;
         },
         store: function(self, key, value) {
@@ -101,4 +101,4 @@ pyscript.module('cache')
         }
     });
 
-pyscript.cache = pyscript.module('cache');
+modar.cache = modar.module('cache');

@@ -1,15 +1,15 @@
-# PyScript
+# ModarJS
 
-[![Build Status](https://travis-ci.org/zebzhao/PyScript.svg?branch=master)](https://travis-ci.org/zebzhao/PyScript)
+[![Build Status](https://travis-ci.org/zebzhao/ModarJS.svg?branch=master)](https://travis-ci.org/zebzhao/ModarJS)
 
-PyScript is a lightweight script loading library mocking Python modules.
+ModarJS is a lightweight script loading library mocking Python modules.
 
 Getting started
 ---
 
-You have following options to get PyScript:
+You have following options to get ModarJS:
 
-- Download the [latest release](https://github.com/zebzhao/PyScript/releases/latest)
+- Download the [latest release](https://github.com/zebzhao/ModarJS/releases/latest)
 - Clone the repo, `git clone git://github.com/zebzhao/pyscript.git`.
 - Install with [Bower](http://bower.io): ```bower install pyscript```
 
@@ -63,7 +63,7 @@ pyscript.modules.mymodule
 There are also standard modules which can be accessed directly on the `pyscript` object:
 
 ```javascript
-// List of standard modules included with PyScript
+// List of standard modules included with ModarJS
 pyscript.requests
 pyscript.cache
 pyscript.router
@@ -240,7 +240,7 @@ Standard modules
 ---
 
 To use a standard module, you need to first initialize it. Note that standard modules do not need to be loaded as they
-are included with PyScript.
+are included with ModarJS.
 ```javascript
 pyscript.module('mymodule')
     .require('hotkeys')
@@ -301,12 +301,12 @@ pyscript.router
 
 Jasmine Testing Support
 ---
-PyScript officially supports Jasmine 2.0 Testing.
+ModarJS officially supports Jasmine 2.0 Testing.
 
 
 ### Dependencies
 Sometimes you want to use CDNs, but this introduces problems when testing locally on a headless browser.
-PyScript solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
+ModarJS solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
 
 Here's an example of how this works:
 
@@ -417,13 +417,13 @@ describe('mymodule', function () {
 
 Developers
 ---
-First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build PyScript. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
+First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build ModarJS. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
 
 ```
 npm install --global gulp
 ```
 
-If you haven't done so already, clone the PyScript git repo.
+If you haven't done so already, clone the ModarJS git repo.
 
 ```
 git clone git://github.com/zebzhao/pyscript.git
@@ -443,7 +443,7 @@ gulp build
 gulp build-debug
 ```
 
-The built version of PyScript will be put in the same folder as ```pyscript.min.js``` and ```pyscript.debug.js```.
+The built version of ModarJS will be put in the same folder as ```pyscript.min.js``` and ```pyscript.debug.js```.
 
 ## Tests
 
@@ -452,7 +452,7 @@ This library aims for test 80%+ coverage. Since some functions cannot be tested 
 
 ## Contributing
 
-PyScript follows the [GitFlow branching model](http://nvie.com/posts/a-successful-git-branching-model). The ```master``` branch always reflects a production-ready state while the latest development is taking place in the ```develop``` branch.
+ModarJS follows the [GitFlow branching model](http://nvie.com/posts/a-successful-git-branching-model). The ```master``` branch always reflects a production-ready state while the latest development is taking place in the ```develop``` branch.
 
 Each time you want to work on a fix or a new feature, create a new branch based on the ```develop``` branch: ```git checkout -b BRANCH_NAME develop```. Only pull requests to the ```develop``` branch will be merged.
 

@@ -1,4 +1,4 @@
-pyscript.module('router')
+modar.module('router')
 
     .__new__(function(self) {
         self.proxy = {
@@ -35,11 +35,11 @@ pyscript.module('router')
 
     .def({
         mockSetup: function(self, throwErrorOnRefresh) {
-            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
+            modar.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
 
             spyOn(self.proxy, 'setHash').and.callFake(function(value) {
                 self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
-                pyscript.defer(self._onchange);
+                modar.defer(self._onchange);
             });
 
             spyOn(self.proxy, 'getHash').and.callFake(function() {
@@ -71,12 +71,12 @@ pyscript.module('router')
             });
         },
         refresh: function(self) {
-            pyscript.defer(function() {
+            modar.defer(function() {
                 self._onchange(self);
             });
         },
         route: function(self, urls, callback) {
-            urls = pyscript.isString(urls) ? [urls] : urls;
+            urls = modar.isString(urls) ? [urls] : urls;
             for (var url,i=0; i < urls.length; i++) {
                 url = urls[i];
                 self._routes[url] = self._routes[url] || [];
@@ -90,7 +90,7 @@ pyscript.module('router')
             var queryParams = self.parseQuery();
             var route = "";
 
-            pyscript.map(function(elem, i) {
+            modar.map(function(elem, i) {
                 route = route + "/" + elem;
                 var callbacks = self._routes[i == paths.length-1 ? route : route + "/*"];
                 if (callbacks && callbacks.length > 0) {
@@ -116,7 +116,7 @@ pyscript.module('router')
             }
             var queryParams = {};
             var valuePair;
-            pyscript.map(function(elem) {
+            modar.map(function(elem) {
                 valuePair = elem.split("=");
                 queryParams[valuePair[0]] = decodeURIComponent(valuePair[1]);
             }, query);
@@ -132,7 +132,7 @@ pyscript.module('router')
             return result.substr(0, result.length-1);
         },
         go: function (self, uri, force) {
-            pyscript.check(uri, String);
+            modar.check(uri, String);
 
             var promise = new core.Promise(function(resolve, reject) {
                 self._promises.push({resolve: resolve, reject: reject});
@@ -146,7 +146,7 @@ pyscript.module('router')
             return promise;
         },
         query: function (self, params) {
-            pyscript.check(params, Object);
+            modar.check(params, Object);
             var queryParams = self.parseQuery();
             for (var name in params) {
                 if (params.hasOwnProperty(name)) queryParams[name] = params[name];
@@ -159,4 +159,4 @@ pyscript.module('router')
         }
     });
 
-pyscript.router = pyscript.module('router');
+modar.router = modar.module('router');

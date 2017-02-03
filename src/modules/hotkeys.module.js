@@ -1,4 +1,4 @@
-pyscript.module('hotkeys')
+modar.module('hotkeys')
     
     .__new__(function(self) {
         self.scope = 'all';
@@ -135,4 +135,4 @@ pyscript.module('hotkeys')
         }
     });
 
-pyscript.hotkeys = pyscript.module('hotkeys');
+modar.hotkeys = modar.module('hotkeys');

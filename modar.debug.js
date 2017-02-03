@@ -1,16 +1,16 @@
-window.pyscript = {modules: {}, _aliases: {}, _cache: {}};
+window.modar = {modules: {}, _aliases: {}, _cache: {}};
 
-pyscript.defer = function(callback) {
+modar.defer = function(callback) {
     setTimeout(callback, 1);
 };
 
-pyscript.log = function() {
-    if (console && console.log && pyscript.debug) {
+modar.log = function() {
+    if (console && console.log && modar.debug) {
         console.log.apply(console, arguments);
     }
 };
 
-pyscript.range = function(start, stop, step) {
+modar.range = function(start, stop, step) {
     if (stop === undefined) {
         stop = start;
         start = 0;
@@ -23,9 +23,9 @@ pyscript.range = function(start, stop, step) {
     return result;
 };
 
-pyscript.noop = function() {};
+modar.noop = function() {};
 
-pyscript.extend = function(target, source) {
+modar.extend = function(target, source) {
     for (var i in source) {
         if (source.hasOwnProperty(i) && source[i] !== undefined) {
             target[i] = source[i];
@@ -34,14 +34,14 @@ pyscript.extend = function(target, source) {
     return target;
 };
 
-pyscript.type = function(obj) {
+modar.type = function(obj) {
     var str = Object.prototype.toString.call(obj);
     return str.toLowerCase().substring(8, str.length-1);
 };
 
-pyscript.map = function(func, object) {
+modar.map = function(func, object) {
     var result, i;
-    switch(pyscript.type(object)) {
+    switch(modar.type(object)) {
         case "array":
             result = [];
             for (i=0; i<object.length; i++) {
@@ -59,7 +59,7 @@ pyscript.map = function(func, object) {
     return result;
 };
 
-pyscript.all = function(func, object) {
+modar.all = function(func, object) {
     for (var i in object) {
         if (object.hasOwnProperty(i)) {
             if (!func.call(null, object[i], i)) {
@@ -70,7 +70,7 @@ pyscript.all = function(func, object) {
     return true;
 };
 
-pyscript.any = function(func, object) {
+modar.any = function(func, object) {
     for (var i in object) {
         if (object.hasOwnProperty(i)) {
             if (func.call(null, object[i], i)) {
@@ -81,8 +81,8 @@ pyscript.any = function(func, object) {
     return false;
 };
 
-pyscript.partial = function(callback) {
-    pyscript.check(callback, Function);
+modar.partial = function(callback) {
+    modar.check(callback, Function);
     var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
     return function() {
         var more_args = [].slice.call(arguments);
@@ -90,26 +90,26 @@ pyscript.partial = function(callback) {
     }
 };
 
-pyscript.alias = function(url, value) {
-    var aliases = pyscript._aliases;
+modar.alias = function(url, value) {
+    var aliases = modar._aliases;
     if (aliases[url]) {
-        pyscript.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
+        modar.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
     }
     if (value) {
         aliases[url] = value;
     }
     var result = aliases[url] || url;
-    return result.indexOf("://") == -1 ? pyscript.base + result : result;
+    return result.indexOf("://") == -1 ? modar.base + result : result;
 };
 
-pyscript.import = function(url) {
-    url = pyscript.alias(url);
+modar.import = function(url) {
+    url = modar.alias(url);
     return new core.Promise(function(resolve, reject) {
-        if (pyscript._cache[url]) {
-            pyscript._cache[url].push({resolve: resolve, reject: reject});
+        if (modar._cache[url]) {
+            modar._cache[url].push({resolve: resolve, reject: reject});
         }
         else {
-            pyscript._cache[url] = [{resolve: resolve, reject: reject}];
+            modar._cache[url] = [{resolve: resolve, reject: reject}];
             var noQuery = url.split('?').shift();
             var ext = noQuery.split('.').pop().toLowerCase();
             var tag = ext == 'js' ? 'script' : 'link';
@@ -120,36 +120,36 @@ pyscript.import = function(url) {
 
             element.onload = function() {
                 var $this = this;
-                pyscript.log(url, "loaded.");
-                pyscript._cache[url].map(function(resolver) {
+                modar.log(url, "loaded.");
+                modar._cache[url].map(function(resolver) {
                     resolver.resolve($this);
                 });
             };
             element.onerror = function() {
-                pyscript.log(url, "failed to loaded.");
-                pyscript._cache[url].map(function(resolver) {
+                modar.log(url, "failed to loaded.");
+                modar._cache[url].map(function(resolver) {
                     resolver.reject('Failed to load ' + url);
                 });
             };
-            pyscript.extend(element, props);
+            modar.extend(element, props);
         }
     });
 };
 
-pyscript.initialize = function(name) {
-    var module = pyscript.modules[name];
+modar.initialize = function(name) {
+    var module = modar.modules[name];
 
     if (module) {
         return module._initialize();
     }
     else {
-        pyscript.assert(false, "Module " + name + " is not defined!")
+        modar.assert(false, "Module " + name + " is not defined!")
     }
 };
 
-pyscript.module = function(name) {
-    if (!pyscript.modules[name]) {
-        pyscript.modules[name] = {
+modar.module = function(name) {
+    if (!modar.modules[name]) {
+        modar.modules[name] = {
             __name__: name,
             __initialized__: false,
             __state__: "",
@@ -172,11 +172,11 @@ pyscript.module = function(name) {
             };
 
             module.def = function(values) {
-                var modified = pyscript.map(function(callable, i) {
-                    return pyscript.partial(callable, module);
+                var modified = modar.map(function(callable, i) {
+                    return modar.partial(callable, module);
                 }, values);
 
-                pyscript.extend(module, modified);
+                modar.extend(module, modified);
 
                 return module;
             };
@@ -202,13 +202,13 @@ pyscript.module = function(name) {
                             module.__init__(resolve);
                             break;
                         default:
-                            pyscript.log("%c" + name + " loading...", "color:DodgerBlue;");
+                            modar.log("%c" + name + " loading...", "color:DodgerBlue;");
                             module.__state__ = 'loading';
                             importScripts(module._scripts)
                                 .then(function() {
                                     initializeModules(module._modules)
                                         .then(function() {
-                                            pyscript.log("%c" + name + " loaded", "font-weight:bold;");
+                                            modar.log("%c" + name + " loaded", "font-weight:bold;");
                                             module.__initialized__ = true;
                                             module.__state__ = 'loaded';
                                             module._callbacks.forEach(function(cb) {
@@ -221,23 +221,23 @@ pyscript.module = function(name) {
                 });
             };
 
-        }(pyscript.modules[name]));
+        }(modar.modules[name]));
     }
     
-    return pyscript.modules[name];
+    return modar.modules[name];
 
 
     function importScripts(scripts) {
-        return core.Promise.all(scripts.map(pyscript.import));
+        return core.Promise.all(scripts.map(modar.import));
     }
 
     function initializeModules(modules) {
-        return core.Promise.all(modules.map(pyscript.initialize));
+        return core.Promise.all(modules.map(modar.initialize));
     }
 };
 
-pyscript.debug = true;
-pyscript.base = '';
+modar.debug = true;
+modar.base = '';
 (function(module) {
     module.extend(module, {
         assert: function(cond) {
@@ -284,7 +284,7 @@ pyscript.base = '';
                     }
                 }
                 catch (e) {
-                    pyscript.assert(false, 'Object does not match check schema.', [obj, schema]);
+                    modar.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
             }
         },
@@ -311,7 +311,7 @@ pyscript.base = '';
             return Object.prototype.toString.call(obj) === '[object Function]';
         }
     });
-})(pyscript);
+})(modar);
 
 (function(module) {
     function PyString(obj) {
@@ -365,7 +365,7 @@ pyscript.base = '';
     module.str = function(str) {
         return new PyString(str || '');
     };
-})(pyscript);
+})(modar);
 
 /**
  * core-js 2.4.1
@@ -2416,7 +2416,7 @@ else if(typeof define == 'function' && define.amd)define(function(){return __e})
 // Export to global object
 else __g.core = __e;
 }(1, 1);
-pyscript.module('cache')
+modar.module('cache')
     
     .__init__(function(self) {
         self._storage = {};
@@ -2460,14 +2460,14 @@ pyscript.module('cache')
             return value ? value.localUrl : url;
         },
         fetch: function(self, url, parser) {
-            pyscript.check(url, String);
+            modar.check(url, String);
 
             return new core.Promise(function(resolve, reject) {
                 if (self._storage[url]) {
                     resolve({cached: true, url: url, parser: parser, result: self.get(url)});
                 }
                 else {
-                    pyscript.requests.get(url)
+                    modar.requests.get(url)
                         .then(function(response) {
                             if (response.http.success) {
                                 var result = response.responseText || "";
@@ -2489,8 +2489,8 @@ pyscript.module('cache')
          * @param destKey {String}
          */
         move: function(self, sourceKey, destKey) {
-            pyscript.check(destKey, String);
-            pyscript.check(sourceKey, String);
+            modar.check(destKey, String);
+            modar.check(sourceKey, String);
             if (destKey == sourceKey) {
                 return;
             }
@@ -2501,11 +2501,11 @@ pyscript.module('cache')
             delete self._storage[sourceKey];
         },
         delete: function(self, url) {
-            pyscript.check(url, String);
+            modar.check(url, String);
             delete self._storage[url];
         },
         contains: function(self, key) {
-            pyscript.check(key, String);
+            modar.check(key, String);
             return self._storage[key] !== undefined;
         },
         store: function(self, key, value) {
@@ -2519,8 +2519,8 @@ pyscript.module('cache')
         }
     });
 
-pyscript.cache = pyscript.module('cache');
-pyscript.module('hotkeys')
+modar.cache = modar.module('cache');
+modar.module('hotkeys')
     
     .__new__(function(self) {
         self.scope = 'all';
@@ -2657,9 +2657,9 @@ pyscript.module('hotkeys')
         }
     });
 
-pyscript.hotkeys = pyscript.module('hotkeys');
+modar.hotkeys = modar.module('hotkeys');
 
-pyscript.module('requests')
+modar.module('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
@@ -2706,7 +2706,7 @@ pyscript.module('requests')
             return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
         },
         _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
-            pyscript.check(callback, Function);
+            modar.check(callback, Function);
 
             var existing = self.routes.find(function(elem) {
                 return elem['pattern'] == urlPattern;
@@ -2720,7 +2720,7 @@ pyscript.module('requests')
                 callThrough: callThrough || false
             };
             if (existing) {
-                pyscript.extend(existing, update)
+                modar.extend(existing, update)
             }
             else {
                 self.routes.push(update);
@@ -2746,12 +2746,12 @@ pyscript.module('requests')
             return self._send('POST', url, file, headers, sync, true);
         },
         _send: function(self, method, url, params, headers, sync, uploadFile) {
-            pyscript.check(method, String);
-            pyscript.check(method, url);
+            modar.check(method, String);
+            modar.check(method, url);
 
             return new core.Promise(function(resolve, reject) {
                 headers = headers || {};
-                if (self.headers) pyscript.extend(headers, self.headers);
+                if (self.headers) modar.extend(headers, self.headers);
 
                 var data;
                 if (uploadFile) {
@@ -2838,7 +2838,7 @@ pyscript.module('requests')
                         var headers = response[2] || {};
                         return headers[name];
                     },
-                    responseText: pyscript.isString(response[1]) ?
+                    responseText: modar.isString(response[1]) ?
                         response[1] : JSON.stringify(response[1])
                 };
                 
@@ -2871,8 +2871,8 @@ pyscript.module('requests')
         }
     });
 
-pyscript.requests = pyscript.module('requests');
-pyscript.module('router')
+modar.requests = modar.module('requests');
+modar.module('router')
 
     .__new__(function(self) {
         self.proxy = {
@@ -2909,11 +2909,11 @@ pyscript.module('router')
 
     .def({
         mockSetup: function(self, throwErrorOnRefresh) {
-            pyscript.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
+            modar.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
 
             spyOn(self.proxy, 'setHash').and.callFake(function(value) {
                 self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
-                pyscript.defer(self._onchange);
+                modar.defer(self._onchange);
             });
 
             spyOn(self.proxy, 'getHash').and.callFake(function() {
@@ -2945,12 +2945,12 @@ pyscript.module('router')
             });
         },
         refresh: function(self) {
-            pyscript.defer(function() {
+            modar.defer(function() {
                 self._onchange(self);
             });
         },
         route: function(self, urls, callback) {
-            urls = pyscript.isString(urls) ? [urls] : urls;
+            urls = modar.isString(urls) ? [urls] : urls;
             for (var url,i=0; i < urls.length; i++) {
                 url = urls[i];
                 self._routes[url] = self._routes[url] || [];
@@ -2964,7 +2964,7 @@ pyscript.module('router')
             var queryParams = self.parseQuery();
             var route = "";
 
-            pyscript.map(function(elem, i) {
+            modar.map(function(elem, i) {
                 route = route + "/" + elem;
                 var callbacks = self._routes[i == paths.length-1 ? route : route + "/*"];
                 if (callbacks && callbacks.length > 0) {
@@ -2990,7 +2990,7 @@ pyscript.module('router')
             }
             var queryParams = {};
             var valuePair;
-            pyscript.map(function(elem) {
+            modar.map(function(elem) {
                 valuePair = elem.split("=");
                 queryParams[valuePair[0]] = decodeURIComponent(valuePair[1]);
             }, query);
@@ -3006,7 +3006,7 @@ pyscript.module('router')
             return result.substr(0, result.length-1);
         },
         go: function (self, uri, force) {
-            pyscript.check(uri, String);
+            modar.check(uri, String);
 
             var promise = new core.Promise(function(resolve, reject) {
                 self._promises.push({resolve: resolve, reject: reject});
@@ -3020,7 +3020,7 @@ pyscript.module('router')
             return promise;
         },
         query: function (self, params) {
-            pyscript.check(params, Object);
+            modar.check(params, Object);
             var queryParams = self.parseQuery();
             for (var name in params) {
                 if (params.hasOwnProperty(name)) queryParams[name] = params[name];
@@ -3033,4 +3033,4 @@ pyscript.module('router')
         }
     });
 
-pyscript.router = pyscript.module('router');
+modar.router = modar.module('router');

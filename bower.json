@@ -1,7 +1,7 @@
 {
   "name": "pyscript",
   "version": "0.7.2",
-  "homepage": "https://github.com/zebzhao/PyScript",
+  "homepage": "https://github.com/zebzhao/ModarJS",
   "dependencies": {},
   "ignore": [
     "node_modules",
