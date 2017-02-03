@@ -1,6 +1,6 @@
 {
-  "name": "ModarJS",
-  "version": "0.8.0",
+  "name": "modar",
+  "version": "0.8.2",
   "homepage": "https://github.com/zebzhao/ModarJS",
   "dependencies": {},
   "ignore": [
