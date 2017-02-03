@@ -1,6 +1,6 @@
 {
-  "name": "pyscript",
-  "version": "0.7.2",
+  "name": "ModarJS",
+  "version": "0.8.0",
   "homepage": "https://github.com/zebzhao/ModarJS",
   "dependencies": {},
   "ignore": [
