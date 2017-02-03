@@ -1,7 +1,7 @@
-PyScript Changelog
+ModarJS Changelog
 ===============
 
-Here you can see the full list of changes between each PyScript release.
+Here you can see the full list of changes between each ModarJS release.
 
 Version 0.7.2
 -----------

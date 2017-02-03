@@ -1,5 +1,5 @@
 {
-  "name": "PyScript",
+  "name": "ModarJS",
   "version": "0.7.2",
   "description": "A package loading library that mocks Python modules.",
   "main": "",

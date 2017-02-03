@@ -1,4 +1,4 @@
-pyscript.module('requests')
+modar.module('requests')
 
     .__init__(function(self) {
         self.interceptors = [];
@@ -45,7 +45,7 @@ pyscript.module('requests')
             return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
         },
         _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
-            pyscript.check(callback, Function);
+            modar.check(callback, Function);
 
             var existing = self.routes.find(function(elem) {
                 return elem['pattern'] == urlPattern;
@@ -59,7 +59,7 @@ pyscript.module('requests')
                 callThrough: callThrough || false
             };
             if (existing) {
-                pyscript.extend(existing, update)
+                modar.extend(existing, update)
             }
             else {
                 self.routes.push(update);
@@ -85,12 +85,12 @@ pyscript.module('requests')
             return self._send('POST', url, file, headers, sync, true);
         },
         _send: function(self, method, url, params, headers, sync, uploadFile) {
-            pyscript.check(method, String);
-            pyscript.check(method, url);
+            modar.check(method, String);
+            modar.check(method, url);
 
             return new core.Promise(function(resolve, reject) {
                 headers = headers || {};
-                if (self.headers) pyscript.extend(headers, self.headers);
+                if (self.headers) modar.extend(headers, self.headers);
 
                 var data;
                 if (uploadFile) {
@@ -177,7 +177,7 @@ pyscript.module('requests')
                         var headers = response[2] || {};
                         return headers[name];
                     },
-                    responseText: pyscript.isString(response[1]) ?
+                    responseText: modar.isString(response[1]) ?
                         response[1] : JSON.stringify(response[1])
                 };
                 
@@ -210,4 +210,4 @@ pyscript.module('requests')
         }
     });
 
-pyscript.requests = pyscript.module('requests');
+modar.requests = modar.module('requests');
