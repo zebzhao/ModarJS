@@ -3,6 +3,10 @@ ModarJS Changelog
 
 Here you can see the full list of changes between each ModarJS release.
 
+Version 0.8.0
+-----------
+- Renamed to ModarJS
+
 Version 0.7.2
 -----------
 - fixed: `router.query` now saves previous query params (expected behavior)
