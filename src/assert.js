@@ -44,7 +44,7 @@
                     }
                 }
                 catch (e) {
-                    modar.assert(false, 'Object does not match check schema.', [obj, schema]);
+                    module.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
             }
         },
@@ -71,4 +71,4 @@
             return Object.prototype.toString.call(obj) === '[object Function]';
         }
     });
-})(modar);
+})(jQuip);

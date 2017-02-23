@@ -11,7 +11,7 @@ You have following options to get ModarJS:
 
 - Download the [latest release](https://github.com/zebzhao/ModarJS/releases/latest)
 - Clone the repo, `git clone git://github.com/zebzhao/ModarJS.git`.
-- Install with [Bower](http://bower.io): ```bower install modar```
+- Install with [Bower](http://bower.io): ```bower install jQuip```
 
 Table of Contents
 ---
@@ -32,12 +32,12 @@ Start by including the file in your main HTML file.
 
 For debugging
 ```html
-<script src="modar.debug.js" type="text/javascript"></script>
+<script src="jQuip.debug.js" type="text/javascript"></script>
 ```
 
 For production
 ```html
-<script src="modar.min.js" type="text/javascript"></script>
+<script src="jQuip.min.js" type="text/javascript"></script>
 ```
 
 ## Defining modules
@@ -46,7 +46,7 @@ Modules and can contain definitions of functions and variables, also provides en
 dependencies are loaded.
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .import('https://example.com/random.css')
     .import('path/to/file/random.js')
     .require('dependency')
@@ -55,34 +55,34 @@ modar.module('mymodule')
 To access the module one can use a function call, or access it through a variable:
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
 // which is the same as:
-modar.modules.mymodule
+jQuip.modules.mymodule
 ```
 
-There are also standard modules which can be accessed directly on the `modar` object:
+There are also standard modules which can be accessed directly on the `jQuip` object:
 
 ```javascript
 // List of standard modules included with ModarJS
-modar.requests
-modar.cache
-modar.router
-modar.hotkeys
+jQuip.requests
+jQuip.cache
+jQuip.router
+jQuip.hotkeys
 ```
 
 ## Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
 
 ```javascript
-modar.import(url).then(callback);
+jQuip.import(url).then(callback);
 ```
 
 This will append either a `<script>` or `<link>` tag depending on if a '.js' file is included.
 When a module is defined, its `__new__` method is automatically immediately called.
-Note that `self` refers to the module (same as `modar.module.mymodule` in the case below).
+Note that `self` refers to the module (same as `jQuip.module.mymodule` in the case below).
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .__new__(function(self) {
         // Do stuff immediately.
         // ...
@@ -91,7 +91,7 @@ modar.module('mymodule')
 Note that multiple `__new__` callback functions can be defined, and they will be called in the defined order:
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .__new__(function(self) {
         console.log('I am first')
     })
@@ -105,7 +105,7 @@ modar.module('mymodule')
 ```javascript
 // A module defined again will refer to the original defined module.
 // This allows module definitions to be split between many files.
-modar.module('mymodule')
+jQuip.module('mymodule')
     .__new__(function(self) {
         console.log('I am third')
     });
@@ -121,15 +121,15 @@ Initializing will load all dependencies. The initialization process has 2 steps:
 To initialize a module manually:
 
 ```javascript
-modar.module('mymodule');
+jQuip.module('mymodule');
 // This can be called anywhere after the module definition.
-modar.initialize('mymodule');
+jQuip.initialize('mymodule');
 ```
 
 To initialize a module as a requirement by another module initialization process:
 
 ```javascript
-modar.module('child')
+jQuip.module('child')
     .import('path/to/modules/mother.js')
     .require('mother');
 ```
@@ -138,7 +138,7 @@ When a module is initialized, its `__init__` method is automatically called.
 The `__init__` method(s) are called after dependencies are loaded.
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .__init__(function(self) {
         console.log('I am initialized')
     });
@@ -147,7 +147,7 @@ modar.module('mymodule')
 Similarly to `__new__`, when defining multiple `__init__` callbacks, they are called in the order of definition.
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .__init__(function(self) {
         self.a = 5;
     })
@@ -159,25 +159,25 @@ modar.module('mymodule')
 
 When a module is initialized, its dependencies will be loaded.
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .import('jquery.min.js')
     .import('angular.min.js')
     .import('https://example.com/script.js');
 
 // Dependencies will be loaded asynchronously (all at the same time).
-modar.initialize('mymodule');
+jQuip.initialize('mymodule');
 ```
 
 An example on requiring modules. In the scenario below that you have 1 module that relies on another module:
 ```javascript
 // Inside mother.module.js
-modar.module('mother')
+jQuip.module('mother')
     .__init__(function(self) {
         console.log('I will be initialized and loaded FIRST!')
     });
 
 // Inside child.module.js
-modar.module('child')
+jQuip.module('child')
     .import('mother.module.js')
     .require('mother')
 
@@ -190,22 +190,22 @@ In the case that your submodule has very large dependencies and needs to be load
 
 ```javascript
 // Inside bigmodule.module.js
-modar.module('bigmodule')
+jQuip.module('bigmodule')
     .import('very-large-file.js')
     .__init__(function(self) {
         // do stuff
     });
 
 // Inside mymodule.module.js
-modar.module('mymodule')
+jQuip.module('mymodule')
     .import('bigmodule.module.js')
     .require('router')   // Load standard module 'router'
     
     .__init__(function(self) {
-        modar.router
+        jQuip.router
             .route('bigmodule', function() {
                 // Initialize bigmodule when hitting mydomain.com/#bigmodule
-                modar.initialize('bigmodule');
+                jQuip.initialize('bigmodule');
             });
     });
 ```
@@ -215,7 +215,7 @@ modar.module('mymodule')
 Methods can be defined in a module in the following way:
 
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .def({
         testMethod1: function(self, string) {
         }),
@@ -223,7 +223,7 @@ modar.module('mymodule')
             self.testMethod1(string);
         });
     });
-modar.modules['mymodule'].callsMethod1('Awesome');
+jQuip.modules['mymodule'].callsMethod1('Awesome');
 ```
 
 Note that the methods are defined on the module instance and injected with a `self` argument.
@@ -242,10 +242,10 @@ Standard modules
 To use a standard module, you need to first initialize it. Note that standard modules do not need to be loaded as they
 are included with ModarJS.
 ```javascript
-modar.module('mymodule')
+jQuip.module('mymodule')
     .require('hotkeys')
     .__init__(function(self) {
-        modar.hotkeys.addKey('ctrl-f', function(e, handler) {
+        jQuip.hotkeys.addKey('ctrl-f', function(e, handler) {
             e.preventDefault(); // Prevents browser default for this shortcut
             console.log('Ctrl-F was pressed!');
         });
@@ -261,7 +261,7 @@ A list of current standard modules can be found below:
 
 ### hotkeys
 ```javascript
-modar.hotkeys.addKey('ctrl-f', function(e, handler) {
+jQuip.hotkeys.addKey('ctrl-f', function(e, handler) {
     e.preventDefault();  // Prevents browser default for this shortcut
     console.log('Ctrl-F was pressed!');
     console.log(handler);  // Contains meta information about the event.
@@ -271,15 +271,15 @@ modar.hotkeys.addKey('ctrl-f', function(e, handler) {
 ### requests
 ```javascript
 // Standard get request, with authorization header
-modar.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
+jQuip.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
     .then(function(response) {
         console.log('RESPONSE', response.responseText);
     })
 // Synchronous call
-var xhr = modar.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
+var xhr = jQuip.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
 console.log(xhr.responseText);
 // Uploading files
-modar.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
+jQuip.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
     .then(function(response) {
         console.log(response.responseText);
         if (!response.http.success) {
@@ -290,7 +290,7 @@ modar.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
 
 ### router
 ```javascript
-modar.router
+jQuip.router
     .route("/route1", function(queryParams) {
         console.log('Route 1:', queryParams);
     })
@@ -311,20 +311,20 @@ ModarJS solves this issue by letting dynamic replacement of external dependencie
 Here's an example of how this works:
 
 ```javascript
-modar.prefix = '/home/user/project';  // Tells the headless browser to local path
-modar.prefix = 'C://path/to/project/folder';  // For Windows
+jQuip.prefix = '/home/user/project';  // Tells the headless browser to local path
+jQuip.prefix = 'C://path/to/project/folder';  // For Windows
 
 describe('mymodule', function () {
     beforeEach(function(done) {
         var self = this;
         
         // This will replace any scripts loading www.example.com/external.js with /home/user/project/lib/external.js
-        modar.mockDependencies({
+        jQuip.mockDependencies({
             "www.example.com/external.js": "lib/external.js"
         });
         
         // Wait till module has loaded asynchronously
-        modar.initialize('mymodule').then(function(mymodule) {
+        jQuip.initialize('mymodule').then(function(mymodule) {
             self.mymodule = mymodule;
             done();
         });
@@ -339,7 +339,7 @@ describe('mymodule', function () {
     beforeEach(function(done) {
         var self = this;
         // Wait till module has loaded asynchronously
-        modar.initialize('mymodule').then(function(mymodule) {
+        jQuip.initialize('mymodule').then(function(mymodule) {
             self.mymodule = mymodule;
             done();
         });
@@ -347,7 +347,7 @@ describe('mymodule', function () {
     
     // Sets up server routes
     beforeEach(function(done) {
-        modar.requests
+        jQuip.requests
             .whenGET(/www.example.com\/myroute/, function(params, config) {
                 return [200, "Raw JSON array"];
             })
@@ -369,20 +369,20 @@ describe('mymodule', function () {
 If you use Jasmine for hairy unit tests, you may often encounter this message in a large app that uses routing: `Some of your tests did a full page reload!`.
 This is sometimes not debuggable as you have no idea where it may be called. Other times it may even be necessary for the page to refresh.
 
-`modar.router` solves this problem by providing a `mockSetup()` method in Jasmine testing which allows page reloading to be handled properly.
+`jQuip.router` solves this problem by providing a `mockSetup()` method in Jasmine testing which allows page reloading to be handled properly.
 
 To redirect the page:
 
 ```javascript
 // do this
-modar.module('mymodule')
+jQuip.module('mymodule')
     .require('router')
     .__init__(function(self) {
-        modar.router.proxy.setHref("www.example.com/new/location");
+        jQuip.router.proxy.setHref("www.example.com/new/location");
     });
 
 // instead of this
-modar.module('mymodule')
+jQuip.module('mymodule')
     .require('router')
     .__init__(function(self) {
         window.location.href = "www.example.com/new/location";
@@ -397,19 +397,19 @@ describe('mymodule', function () {
     beforeEach(function(done) {
         var self = this;
         // Wait till module has loaded asynchronously
-        modar.initialize('mymodule').then(function(mymodule) {
+        jQuip.initialize('mymodule').then(function(mymodule) {
             self.mymodule = mymodule;
             done();
         });
     });
     
     it('should not throw page reload error', function() {
-        modar.router.mockSetup();
+        jQuip.router.mockSetup();
         this.mymodule.gotoLocation();  // No error is thrown!
     });
     
     it('should throw error with stack trace', function() {
-        modar.router.mockSetup(true);
+        jQuip.router.mockSetup(true);
         this.mymodule.gotoLocation();  // Error is thrown on page refresh!
     });
 });
@@ -426,12 +426,11 @@ npm install --global gulp
 If you haven't done so already, clone the ModarJS git repo.
 
 ```
-git clone git://github.com/zebzhao/modar.git
+git clone git://github.com/zebzhao/jQuip.git
 ```
 Install the Node dependencies.
 
 ```
-cd modar
 npm install
 ```
 
@@ -443,7 +442,7 @@ gulp build
 gulp build-debug
 ```
 
-The built version of ModarJS will be put in the same folder as ```modar.min.js``` and ```modar.debug.js```.
+The built version of ModarJS will be put in the same folder as ```jQuip.min.js``` and ```jQuip.debug.js```.
 
 ## Tests
 

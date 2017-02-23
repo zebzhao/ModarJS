@@ -1,243 +1,244 @@
-window.modar = {modules: {}, _aliases: {}, _cache: {}};
+ window.jQuip = window.$jQ = (function(exports) {
+    exports.defer = function (callback) {
+        setTimeout(callback, 1);
+    };
 
-modar.defer = function(callback) {
-    setTimeout(callback, 1);
-};
-
-modar.log = function() {
-    if (console && console.log && modar.debug) {
-        console.log.apply(console, arguments);
-    }
-};
-
-modar.range = function(start, stop, step) {
-    if (stop === undefined) {
-        stop = start;
-        start = 0;
-    }
-    step = step || 1;
-    var result = [];
-    for (var i=start; i < stop; i += step) {
-        result.push(i);
-    }
-    return result;
-};
-
-modar.noop = function() {};
-
-modar.extend = function(target, source) {
-    for (var i in source) {
-        if (source.hasOwnProperty(i) && source[i] !== undefined) {
-            target[i] = source[i];
+    exports.log = function () {
+        if (console && console.log && exports.debug) {
+            console.log.apply(console, arguments);
         }
-    }
-    return target;
-};
+    };
 
-modar.type = function(obj) {
-    var str = Object.prototype.toString.call(obj);
-    return str.toLowerCase().substring(8, str.length-1);
-};
+    exports.range = function (start, stop, step) {
+        if (stop === undefined) {
+            stop = start;
+            start = 0;
+        }
+        step = step || 1;
+        var result = [];
+        for (var i = start; i < stop; i += step) {
+            result.push(i);
+        }
+        return result;
+    };
 
-modar.map = function(func, object) {
-    var result, i;
-    switch(modar.type(object)) {
-        case "array":
-            result = [];
-            for (i=0; i<object.length; i++) {
-                result.push(func.call(null, object[i], i));
+    exports.noop = function () {
+    };
+
+    exports.extend = function (target, source) {
+        for (var i in source) {
+            if (source.hasOwnProperty(i) && source[i] !== undefined) {
+                target[i] = source[i];
             }
-            break;
-        default:
-            result = {};
-            for (i in object) {
-                if (object.hasOwnProperty(i)) {
-                    result[i] = func.call(null, object[i], i);
+        }
+        return target;
+    };
+
+    exports.type = function (obj) {
+        var str = Object.prototype.toString.call(obj);
+        return str.toLowerCase().substring(8, str.length - 1);
+    };
+
+    exports.map = function (func, object) {
+        var result, i;
+        switch (exports.type(object)) {
+            case "array":
+                result = [];
+                for (i = 0; i < object.length; i++) {
+                    result.push(func.call(null, object[i], i));
+                }
+                break;
+            default:
+                result = {};
+                for (i in object) {
+                    if (object.hasOwnProperty(i)) {
+                        result[i] = func.call(null, object[i], i);
+                    }
+                }
+        }
+        return result;
+    };
+
+    exports.all = function (func, object) {
+        for (var i in object) {
+            if (object.hasOwnProperty(i)) {
+                if (!func.call(null, object[i], i)) {
+                    return false;
                 }
             }
-    }
-    return result;
-};
+        }
+        return true;
+    };
 
-modar.all = function(func, object) {
-    for (var i in object) {
-        if (object.hasOwnProperty(i)) {
-            if (!func.call(null, object[i], i)) {
-                return false;
+    exports.any = function (func, object) {
+        for (var i in object) {
+            if (object.hasOwnProperty(i)) {
+                if (func.call(null, object[i], i)) {
+                    return true;
+                }
             }
         }
-    }
-    return true;
-};
+        return false;
+    };
 
-modar.any = function(func, object) {
-    for (var i in object) {
-        if (object.hasOwnProperty(i)) {
-            if (func.call(null, object[i], i)) {
-                return true;
-            }
+    exports.partial = function (callback) {
+        exports.check(callback, Function);
+        var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
+        return function () {
+            var more_args = [].slice.call(arguments);
+            return callback.apply(this, args.concat(more_args));
         }
-    }
-    return false;
-};
+    };
 
-modar.partial = function(callback) {
-    modar.check(callback, Function);
-    var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
-    return function() {
-        var more_args = [].slice.call(arguments);
-        return callback.apply(this, args.concat(more_args));
-    }
-};
+    exports.alias = function (url, value) {
+        var aliases = exports._aliases;
+        if (aliases[url]) {
+            exports.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
+        }
+        if (value) {
+            aliases[url] = value;
+        }
+        var result = aliases[url] || url;
+        return result.indexOf("://") == -1 ? exports.base + result : result;
+    };
 
-modar.alias = function(url, value) {
-    var aliases = modar._aliases;
-    if (aliases[url]) {
-        modar.log("%c" + url + " overridden by " + aliases[url], "color:DodgerBlue;");
-    }
-    if (value) {
-        aliases[url] = value;
-    }
-    var result = aliases[url] || url;
-    return result.indexOf("://") == -1 ? modar.base + result : result;
-};
+    exports.import = function (url) {
+        url = exports.alias(url);
+        return new core.Promise(function (resolve, reject) {
+            if (exports._cache[url]) {
+                exports._cache[url].push({resolve: resolve, reject: reject});
+            }
+            else {
+                exports._cache[url] = [{resolve: resolve, reject: reject}];
+                var noQuery = url.split('?').shift();
+                var ext = noQuery.split('.').pop().toLowerCase();
+                var tag = ext == 'js' ? 'script' : 'link';
+                var props = ext == 'js' ? {src: url} : {href: url};
+                var element = document.createElement(tag);
 
-modar.import = function(url) {
-    url = modar.alias(url);
-    return new core.Promise(function(resolve, reject) {
-        if (modar._cache[url]) {
-            modar._cache[url].push({resolve: resolve, reject: reject});
+                document.head.appendChild(element);
+
+                element.onload = function () {
+                    var $this = this;
+                    exports.log(url, "loaded.");
+                    exports._cache[url].map(function (resolver) {
+                        resolver.resolve($this);
+                    });
+                };
+                element.onerror = function () {
+                    exports.log(url, "failed to loaded.");
+                    exports._cache[url].map(function (resolver) {
+                        resolver.reject('Failed to load ' + url);
+                    });
+                };
+                exports.extend(element, props);
+            }
+        });
+    };
+
+    exports.initialize = function (name) {
+        var module = exports.modules[name];
+
+        if (module) {
+            return module._initialize();
         }
         else {
-            modar._cache[url] = [{resolve: resolve, reject: reject}];
-            var noQuery = url.split('?').shift();
-            var ext = noQuery.split('.').pop().toLowerCase();
-            var tag = ext == 'js' ? 'script' : 'link';
-            var props = ext == 'js' ? {src: url} : {href: url};
-            var element = document.createElement(tag);
-
-            document.head.appendChild(element);
-
-            element.onload = function() {
-                var $this = this;
-                modar.log(url, "loaded.");
-                modar._cache[url].map(function(resolver) {
-                    resolver.resolve($this);
-                });
-            };
-            element.onerror = function() {
-                modar.log(url, "failed to loaded.");
-                modar._cache[url].map(function(resolver) {
-                    resolver.reject('Failed to load ' + url);
-                });
-            };
-            modar.extend(element, props);
+            exports.assert(false, "Module " + name + " is not defined!")
         }
-    });
-};
+    };
 
-modar.initialize = function(name) {
-    var module = modar.modules[name];
+    exports.module = function (name) {
+        if (!exports.modules[name]) {
+            exports.modules[name] = {
+                __name__: name,
+                __initialized__: false,
+                __state__: "",
 
-    if (module) {
-        return module._initialize();
-    }
-    else {
-        modar.assert(false, "Module " + name + " is not defined!")
-    }
-};
-
-modar.module = function(name) {
-    if (!modar.modules[name]) {
-        modar.modules[name] = {
-            __name__: name,
-            __initialized__: false,
-            __state__: "",
-
-            _scripts: [],
-            _modules: [],
-            _callbacks: Array.from([])
-        };
-
-        (function(module) {
-
-            module.import = function(url) {
-                module._scripts.push(url);
-                return module;
+                _scripts: [],
+                _modules: [],
+                _callbacks: Array.from([])
             };
 
-            module.require = function(name) {
-                module._modules.push(name);
-                return module;
-            };
+            (function (module) {
 
-            module.def = function(values) {
-                var modified = modar.map(function(callable, i) {
-                    return modar.partial(callable, module);
-                }, values);
+                module.import = function (url) {
+                    module._scripts.push(url);
+                    return module;
+                };
 
-                modar.extend(module, modified);
+                module.require = function (name) {
+                    module._modules.push(name);
+                    return module;
+                };
 
-                return module;
-            };
+                module.def = function (values) {
+                    var modified = exports.map(function (callable, i) {
+                        return exports.partial(callable, module);
+                    }, values);
 
-            module.__init__ = function(callback) {
-                module._callbacks.push(callback);
-                return module;
-            };
+                    exports.extend(module, modified);
 
-            module.__new__ = function(callback) {
-                callback.call(null, module);
-                return module;
-            };
+                    return module;
+                };
 
-            module._initialize = function() {
-                return new core.Promise(function(resolve, reject) {
+                module.__init__ = function (callback) {
+                    module._callbacks.push(callback);
+                    return module;
+                };
 
-                    switch(module.__state__) {
-                        case 'loaded':
-                            resolve(module);
-                            break;
-                        case 'loading':
-                            module.__init__(resolve);
-                            break;
-                        default:
-                            modar.log("%c" + name + " loading...", "color:DodgerBlue;");
-                            module.__state__ = 'loading';
-                            importScripts(module._scripts)
-                                .then(function() {
-                                    initializeModules(module._modules)
-                                        .then(function() {
-                                            modar.log("%c" + name + " loaded", "font-weight:bold;");
-                                            module.__initialized__ = true;
-                                            module.__state__ = 'loaded';
-                                            module._callbacks.forEach(function(cb) {
-                                                cb.call(null, module);
-                                            });
-                                            resolve(module);
-                                        }, reject);
-                                }, reject);
-                    }
-                });
-            };
+                module.__new__ = function (callback) {
+                    callback.call(null, module);
+                    return module;
+                };
 
-        }(modar.modules[name]));
-    }
-    
-    return modar.modules[name];
+                module._initialize = function () {
+                    return new core.Promise(function (resolve, reject) {
+
+                        switch (module.__state__) {
+                            case 'loaded':
+                                resolve(module);
+                                break;
+                            case 'loading':
+                                module.__init__(resolve);
+                                break;
+                            default:
+                                exports.log("%c" + name + " loading...", "color:DodgerBlue;");
+                                module.__state__ = 'loading';
+                                importScripts(module._scripts)
+                                    .then(function () {
+                                        initializeModules(module._modules)
+                                            .then(function () {
+                                                exports.log("%c" + name + " loaded", "font-weight:bold;");
+                                                module.__initialized__ = true;
+                                                module.__state__ = 'loaded';
+                                                module._callbacks.forEach(function (cb) {
+                                                    cb.call(null, module);
+                                                });
+                                                resolve(module);
+                                            }, reject);
+                                    }, reject);
+                        }
+                    });
+                };
+
+            }(exports.modules[name]));
+        }
+
+        return exports.modules[name];
 
 
-    function importScripts(scripts) {
-        return core.Promise.all(scripts.map(modar.import));
-    }
+        function importScripts(scripts) {
+            return core.Promise.all(scripts.map(exports.import));
+        }
 
-    function initializeModules(modules) {
-        return core.Promise.all(modules.map(modar.initialize));
-    }
-};
+        function initializeModules(modules) {
+            return core.Promise.all(modules.map(exports.initialize));
+        }
+    };
 
-modar.debug = true;
-modar.base = '';
+    return exports;
+})({modules: {}, _aliases: {}, _cache: {}, debug: true, base: ''});
+
 (function(module) {
     module.extend(module, {
         assert: function(cond) {
@@ -284,7 +285,7 @@ modar.base = '';
                     }
                 }
                 catch (e) {
-                    modar.assert(false, 'Object does not match check schema.', [obj, schema]);
+                    module.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
             }
         },
@@ -311,7 +312,7 @@ modar.base = '';
             return Object.prototype.toString.call(obj) === '[object Function]';
         }
     });
-})(modar);
+})(jQuip);
 
 (function(module) {
     function PyString(obj) {
@@ -365,7 +366,7 @@ modar.base = '';
     module.str = function(str) {
         return new PyString(str || '');
     };
-})(modar);
+})(jQuip);
 
 /**
  * core-js 2.4.1
@@ -2416,621 +2417,633 @@ else if(typeof define == 'function' && define.amd)define(function(){return __e})
 // Export to global object
 else __g.core = __e;
 }(1, 1);
-modar.module('cache')
-    
-    .__init__(function(self) {
-        self._storage = {};
-    })
-
-    .def({
-        flush: function(self) {
-            self._storage = {};
-        },
-        /**
-         * Files that are uploaded from local will have their location hashed.
-         * This enables the use of Spriter in offline mode using local images.
-         * @param self
-         * @param url   The target id.
-         * @param file  The File object that was chosen to be uploaded.
-         */
-        cacheFile: function(self, url, file) {
-            return new core.Promise(function(resolve, reject) {
-                var reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    var result = {url: url, localUrl: e.target.result, file: file};
-                    self._storage[url] = result;
-                    resolve(result);
-                };
-                reader.onerror = function(e) {
-                    reject(e);
-                };
-                
-                reader.readAsDataURL(file);
-            });
-        },
-        /**
-         * Fetches a local url if one exists in the cache. Otherwise just returns
-         * the remote url.
-         * @param self
-         * @param url   The remote url to check for.
-         */
-        fetchUrl: function(self, url) {
-            var value = self._storage[url];
-            return value ? value.localUrl : url;
-        },
-        fetch: function(self, url, parser) {
-            modar.check(url, String);
-
-            return new core.Promise(function(resolve, reject) {
-                if (self._storage[url]) {
-                    resolve({cached: true, url: url, parser: parser, result: self.get(url)});
-                }
-                else {
-                    modar.requests.get(url)
-                        .then(function(response) {
-                            if (response.http.success) {
-                                var result = response.responseText || "";
-                                result = parser ? parser(result) : result;
-                                self.store(url, result);
-                                resolve({cached: false, url: url, parser: parser, result: result});
-                            }
-                            else {
-                                reject(response);
-                            }
-                        }, reject);
-                }
-            });
-        },
-        /**
-         * Change the key of existing local key.
-         * @param self
-         * @param sourceKey {String}
-         * @param destKey {String}
-         */
-        move: function(self, sourceKey, destKey) {
-            modar.check(destKey, String);
-            modar.check(sourceKey, String);
-            if (destKey == sourceKey) {
-                return;
-            }
-            if (self._storage[sourceKey] === undefined) {
-                throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
-            }
-            self._storage[destKey] = self._storage[sourceKey];
-            delete self._storage[sourceKey];
-        },
-        delete: function(self, url) {
-            modar.check(url, String);
-            delete self._storage[url];
-        },
-        contains: function(self, key) {
-            modar.check(key, String);
-            return self._storage[key] !== undefined;
-        },
-        store: function(self, key, value) {
-            self._storage[key] = value;
-        },
-        get: function(self, id, defaultValue) {
-            return self.contains(id) ? self._storage[id] : defaultValue;
-        },
-        keys: function(self) {
-            return Object.keys(self._storage);
-        }
-    });
-
-modar.cache = modar.module('cache');
-modar.module('hotkeys')
-    
-    .__new__(function(self) {
-        self.scope = 'all';
-
-        self._keyMap = {
-            backspace: 8, tab: 9, clear: 12,
-            enter: 13, 'return': 13,
-            esc: 27, escape: 27, space: 32,
-            left: 37, up: 38, right: 39, down: 40,
-            del: 46, 'delete': 46,
-            home: 36, end: 35,
-            pageup: 33, pagedown: 34,
-            ',': 188, '.': 190, '/': 191,
-            '`': 192, '-': 189, '=': 187,
-            ';': 186, '\'': 222,
-            '[': 219, ']': 221, '\\': 220
-        };
-        self._downKeys=[];
-        self._modifierMap = {
-            16:'shiftKey',
-            18:'altKey',
-            17:'ctrlKey',
-            91:'metaKey'
-        };
-        self._modifier = {
-            '⇧': 16, shift: 16,
-            '⌥': 18, alt: 18, option: 18,
-            '⌃': 17, ctrl: 17, control: 17,
-            '⌘': 91, command: 91
-        };
-        self._mods = { 16: false, 18: false, 17: false, 91: false };
-        self._handlers = {};
-        for(var k=1;k<20;k++) {
-            self._keyMap['f'+k] = 111+k;
-        }
-    })
-    .__init__(function(self) {
-        document.addEventListener('keydown', self.dispatchKeyEvent);
-        document.addEventListener('keyup', self.clearModifiers);
-    })
-    .def({
-        clearModifiers: function(self, event){
-            var key = event.keyCode,
-                i = self._downKeys.indexOf(key);
-
-            if(i>=0) self._downKeys.splice(i,1);
-
-            if(key === 93 || key === 224) key = 91;
-            if(key in self._mods) {
-                self._mods[key] = false;
-            }
-        },
-        dispatchKeyEvent: function(self, event) {
-            var key = event.keyCode;
-
-            if(self._downKeys.indexOf(key)===-1) self._downKeys.push(key);
-
-            if(key === 93 || key === 224) key = 91;
-            if(key in self._mods) {
-                self._mods[key] = true;
-            }
-            for(var e in self._mods)
-                self._mods[e] = event[self._modifierMap[e]];
-
-            if(!self.filter.call(this,event)) return;
-
-            if (!(key in self._handlers)) return;
-
-            var activeMods = self._mods;
-
-            for (var handler, i = 0; i < self._handlers[key].length; i++) {
-                handler = self._handlers[key][i];
-
-                var handlerMods = handler.mods;
-                var modifiersMatch = handlerMods.length > 0;
-
-                for(var y in activeMods){
-                    y = parseInt(y);
-                    if(
-                        (!activeMods[y] && handlerMods.indexOf(y) != -1) ||
-                        (activeMods[y] && handlerMods.indexOf(y) == -1)) {
-                        modifiersMatch = false;
-                        break;
-                    }
-                }
-                if(
-                    (handlerMods.length === 0
-                    && !activeMods[16] && !activeMods[18] && !activeMods[17] && !activeMods[91])
-                    || modifiersMatch) {
-                    handler.method(event, handler);
-                }
-            }
-        },
-        getKeys: function(self, key) {
-            var keys = key.replace(/\s/g, '').split(',');
-            if ((keys[keys.length - 1]) === '') keys[keys.length - 2] += ',';
-            return keys;
-        },
-        getMods: function(self, key) {
-            var mods = key.slice(0, key.length - 1);
-            for (var i = 0; i < mods.length; i++)
-                mods[i] = self._modifier[mods[i].toLowerCase()];
-            return mods;
-        },
-        addKey: function(self, key, scope, method){
-            var keys = self.getKeys(key);
-
-            if (!method) {
-                method = scope;
-                scope = 'all';
-            }
-
-            var lastKey, keyArray;
-            for(var i=0;i < keys.length; i++){
-                keyArray = keys[i].split('-');
-
-                lastKey = keyArray[keyArray.length-1];
-                lastKey = self._keyMap[lastKey] || lastKey.toUpperCase().charCodeAt(0);
-
-                var mods = [];
-                if (keyArray.length > 1){
-                    mods = self.getMods(keyArray);
-                }
-
-                if (!(lastKey in self._handlers))
-                    self._handlers[lastKey] = [];
-
-                self._handlers[lastKey].push({shortcut: keys[i], scope: scope, method: method, key: keys[i], mods: mods});
-            }
-        },
-        filter: function(self, event){
-            var tagName = (event.target).tagName;
-            return !(tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA');
-        }
-    });
-
-modar.hotkeys = modar.module('hotkeys');
-
-modar.module('requests')
-
-    .__init__(function(self) {
-        self.interceptors = [];
-        self.parsers = {echo: function(input) {return input;}};
-        self.headers = null;
-        self.routes = Array.from([]);
+(function(exports) {
+    exports.cache = exports.module('cache')
         
-        self._defaultStatusText = {
-            200: 'OK',
-            201: 'Created',
-            202: 'Accepted',
-            204: 'No Content',
-            400: 'Bad Request',
-            401: 'Unauthorized',
-            402: 'Payment Required',
-            403: 'Forbidden',
-            404: 'Not Found',
-            405: 'Method Not Allowed',
-            406: 'Not Acceptable',
-            409: 'Conflict',
-            500: 'Internal Server Error',
-            501: 'Not Implemented',
-            502: 'Bad Gateway',
-            503: 'Service Unavailable',
-            504: 'Gateway Timeout',
-            511: 'Network Authentication Required'
-        }
-    })
+        .__init__(function(self) {
+            self._storage = {};
+        })
 
-    .def({
-        whenGET: function(self, urlPattern, callback, callThrough, priority) {
-            return self._storeRoute('GET', urlPattern, callback, callThrough, priority);
-        },
-        whenPOST: function(self, urlPattern, callback, callThrough, priority) {
-            return self._storeRoute('POST', urlPattern, callback, callThrough, priority);
-        },
-        whenPATCH: function(self, urlPattern, callback, callThrough, priority) {
-            return self._storeRoute('PATCH', urlPattern, callback, callThrough, priority);
-        },
-        whenPUT: function(self, urlPattern, callback, callThrough, priority) {
-            return self._storeRoute('PUT', urlPattern, callback, callThrough, priority);
-        },
-        whenDELETE: function(self, urlPattern, callback, callThrough, priority) {
-            return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
-        },
-        _storeRoute: function(self, method, urlPattern, callback, callThrough, priority) {
-            modar.check(callback, Function);
+        .def({
+            flush: function(self) {
+                self._storage = {};
+            },
+            /**
+             * Files that are uploaded from local will have their location hashed.
+             * This enables the use of Spriter in offline mode using local images.
+             * @param self
+             * @param url   The target id.
+             * @param file  The File object that was chosen to be uploaded.
+             */
+            cacheFile: function(self, url, file) {
+                return new core.Promise(function(resolve, reject) {
+                    var reader = new FileReader();
 
-            var existing = self.routes.find(function(elem) {
-                return elem['pattern'] == urlPattern;
-            });
+                    reader.onload = function(e) {
+                        var result = {url: url, localUrl: e.target.result, file: file};
+                        self._storage[url] = result;
+                        resolve(result);
+                    };
+                    reader.onerror = function(e) {
+                        reject(e);
+                    };
 
-            var update = {
-                priority: priority || 1,
-                pattern: new RegExp(urlPattern),
-                method: method,
-                callback: callback,
-                callThrough: callThrough || false
+                    reader.readAsDataURL(file);
+                });
+            },
+            /**
+             * Fetches a local url if one exists in the cache. Otherwise just returns
+             * the remote url.
+             * @param self
+             * @param url   The remote url to check for.
+             */
+            fetchUrl: function(self, url) {
+                var value = self._storage[url];
+                return value ? value.localUrl : url;
+            },
+            fetch: function(self, url, parser) {
+                exports.check(url, String);
+
+                return new core.Promise(function(resolve, reject) {
+                    if (self._storage[url]) {
+                        resolve({cached: true, url: url, parser: parser, result: self.get(url)});
+                    }
+                    else {
+                        exports.requests.get(url)
+                            .then(function(response) {
+                                if (response.http.success) {
+                                    var result = response.responseText || "";
+                                    result = parser ? parser(result) : result;
+                                    self.store(url, result);
+                                    resolve({cached: false, url: url, parser: parser, result: result});
+                                }
+                                else {
+                                    reject(response);
+                                }
+                            }, reject);
+                    }
+                });
+            },
+            /**
+             * Change the key of existing local key.
+             * @param self
+             * @param sourceKey {String}
+             * @param destKey {String}
+             */
+            move: function(self, sourceKey, destKey) {
+                exports.check(destKey, String);
+                exports.check(sourceKey, String);
+                if (destKey == sourceKey) {
+                    return;
+                }
+                if (self._storage[sourceKey] === undefined) {
+                    throw new ReferenceError('Cannot find ' + sourceKey + ' in cache!');
+                }
+                self._storage[destKey] = self._storage[sourceKey];
+                delete self._storage[sourceKey];
+            },
+            delete: function(self, url) {
+                exports.check(url, String);
+                delete self._storage[url];
+            },
+            contains: function(self, key) {
+                exports.check(key, String);
+                return self._storage[key] !== undefined;
+            },
+            store: function(self, key, value) {
+                self._storage[key] = value;
+            },
+            get: function(self, id, defaultValue) {
+                return self.contains(id) ? self._storage[id] : defaultValue;
+            },
+            keys: function(self) {
+                return Object.keys(self._storage);
+            }
+        });
+})(jQuip);
+
+(function(exports) {
+    exports.hotkeys = exports.module('hotkeys')
+
+        .__new__(function (self) {
+            self.scope = 'all';
+
+            self._keyMap = {
+                backspace: 8, tab: 9, clear: 12,
+                enter: 13, 'return': 13,
+                esc: 27, escape: 27, space: 32,
+                left: 37, up: 38, right: 39, down: 40,
+                del: 46, 'delete': 46,
+                home: 36, end: 35,
+                pageup: 33, pagedown: 34,
+                ',': 188, '.': 190, '/': 191,
+                '`': 192, '-': 189, '=': 187,
+                ';': 186, '\'': 222,
+                '[': 219, ']': 221, '\\': 220
             };
-            if (existing) {
-                modar.extend(existing, update)
+            self._downKeys = [];
+            self._modifierMap = {
+                16: 'shiftKey',
+                18: 'altKey',
+                17: 'ctrlKey',
+                91: 'metaKey'
+            };
+            self._modifier = {
+                '⇧': 16, shift: 16,
+                '⌥': 18, alt: 18, option: 18,
+                '⌃': 17, ctrl: 17, control: 17,
+                '⌘': 91, command: 91
+            };
+            self._mods = {16: false, 18: false, 17: false, 91: false};
+            self._handlers = {};
+            for (var k = 1; k < 20; k++) {
+                self._keyMap['f' + k] = 111 + k;
             }
-            else {
-                self.routes.push(update);
+        })
+        .__init__(function (self) {
+            document.addEventListener('keydown', self.dispatchKeyEvent);
+            document.addEventListener('keyup', self.clearModifiers);
+        })
+        .def({
+            clearModifiers: function (self, event) {
+                var key = event.keyCode,
+                    i = self._downKeys.indexOf(key);
+
+                if (i >= 0) self._downKeys.splice(i, 1);
+
+                if (key === 93 || key === 224) key = 91;
+                if (key in self._mods) {
+                    self._mods[key] = false;
+                }
+            },
+            dispatchKeyEvent: function (self, event) {
+                var key = event.keyCode;
+
+                if (self._downKeys.indexOf(key) === -1) self._downKeys.push(key);
+
+                if (key === 93 || key === 224) key = 91;
+                if (key in self._mods) {
+                    self._mods[key] = true;
+                }
+                for (var e in self._mods)
+                    self._mods[e] = event[self._modifierMap[e]];
+
+                if (!self.filter.call(this, event)) return;
+
+                if (!(key in self._handlers)) return;
+
+                var activeMods = self._mods;
+
+                for (var handler, i = 0; i < self._handlers[key].length; i++) {
+                    handler = self._handlers[key][i];
+
+                    var handlerMods = handler.mods;
+                    var modifiersMatch = handlerMods.length > 0;
+
+                    for (var y in activeMods) {
+                        y = parseInt(y);
+                        if (
+                            (!activeMods[y] && handlerMods.indexOf(y) != -1) ||
+                            (activeMods[y] && handlerMods.indexOf(y) == -1)) {
+                            modifiersMatch = false;
+                            break;
+                        }
+                    }
+                    if (
+                        (handlerMods.length === 0
+                        && !activeMods[16] && !activeMods[18] && !activeMods[17] && !activeMods[91])
+                        || modifiersMatch) {
+                        handler.method(event, handler);
+                    }
+                }
+            },
+            getKeys: function (self, key) {
+                var keys = key.replace(/\s/g, '').split(',');
+                if ((keys[keys.length - 1]) === '') keys[keys.length - 2] += ',';
+                return keys;
+            },
+            getMods: function (self, key) {
+                var mods = key.slice(0, key.length - 1);
+                for (var i = 0; i < mods.length; i++)
+                    mods[i] = self._modifier[mods[i].toLowerCase()];
+                return mods;
+            },
+            addKey: function (self, key, scope, method) {
+                var keys = self.getKeys(key);
+
+                if (!method) {
+                    method = scope;
+                    scope = 'all';
+                }
+
+                var lastKey, keyArray;
+                for (var i = 0; i < keys.length; i++) {
+                    keyArray = keys[i].split('-');
+
+                    lastKey = keyArray[keyArray.length - 1];
+                    lastKey = self._keyMap[lastKey] || lastKey.toUpperCase().charCodeAt(0);
+
+                    var mods = [];
+                    if (keyArray.length > 1) {
+                        mods = self.getMods(keyArray);
+                    }
+
+                    if (!(lastKey in self._handlers))
+                        self._handlers[lastKey] = [];
+
+                    self._handlers[lastKey].push({
+                        shortcut: keys[i],
+                        scope: scope,
+                        method: method,
+                        key: keys[i],
+                        mods: mods
+                    });
+                }
+            },
+            filter: function (self, event) {
+                var tagName = (event.target).tagName;
+                return !(tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA');
             }
-            return self;
-        },
-        get: function(self, url, headers, sync) {
-            return self._send('GET', url, null, headers, sync);
-        },
-        del: function(self, url, headers, sync) {
-            return self._send('DELETE', url, null, headers, sync);
-        },
-        patch: function(self, url, params, headers, sync) {
-            return self._send('PATCH', url, params, headers, sync);
-        },
-        post: function(self, url, params, headers, sync) {
-            return self._send('POST', url, params, headers, sync);
-        },
-        put: function(self, url, params, headers, sync) {
-            return self._send('PUT', url, params, headers, sync);
-        },
-        upload: function(self, url, file, headers, sync) {
-            return self._send('POST', url, file, headers, sync, true);
-        },
-        _send: function(self, method, url, params, headers, sync, uploadFile) {
-            modar.check(method, String);
-            modar.check(method, url);
+        });
+})(jQuip);
 
-            return new core.Promise(function(resolve, reject) {
-                headers = headers || {};
-                if (self.headers) modar.extend(headers, self.headers);
+(function(exports) {
+    exports.requests = exports.module('requests')
 
-                var data;
-                if (uploadFile) {
-                    data = new FormData();
-                    data.append("upload", params);
-                    data.upload = params;
+        .__init__(function (self) {
+            self.interceptors = [];
+            self.parsers = {
+                echo: function (input) {
+                    return input;
+                }
+            };
+            self.headers = null;
+            self.routes = Array.from([]);
+
+            self._defaultStatusText = {
+                200: 'OK',
+                201: 'Created',
+                202: 'Accepted',
+                204: 'No Content',
+                400: 'Bad Request',
+                401: 'Unauthorized',
+                402: 'Payment Required',
+                403: 'Forbidden',
+                404: 'Not Found',
+                405: 'Method Not Allowed',
+                406: 'Not Acceptable',
+                409: 'Conflict',
+                500: 'Internal Server Error',
+                501: 'Not Implemented',
+                502: 'Bad Gateway',
+                503: 'Service Unavailable',
+                504: 'Gateway Timeout',
+                511: 'Network Authentication Required'
+            }
+        })
+
+        .def({
+            whenGET: function (self, urlPattern, callback, callThrough, priority) {
+                return self._storeRoute('GET', urlPattern, callback, callThrough, priority);
+            },
+            whenPOST: function (self, urlPattern, callback, callThrough, priority) {
+                return self._storeRoute('POST', urlPattern, callback, callThrough, priority);
+            },
+            whenPATCH: function (self, urlPattern, callback, callThrough, priority) {
+                return self._storeRoute('PATCH', urlPattern, callback, callThrough, priority);
+            },
+            whenPUT: function (self, urlPattern, callback, callThrough, priority) {
+                return self._storeRoute('PUT', urlPattern, callback, callThrough, priority);
+            },
+            whenDELETE: function (self, urlPattern, callback, callThrough, priority) {
+                return self._storeRoute('DELETE', urlPattern, callback, callThrough, priority);
+            },
+            _storeRoute: function (self, method, urlPattern, callback, callThrough, priority) {
+                exports.check(callback, Function);
+
+                var existing = self.routes.find(function (elem) {
+                    return elem['pattern'] == urlPattern;
+                });
+
+                var update = {
+                    priority: priority || 1,
+                    pattern: new RegExp(urlPattern),
+                    method: method,
+                    callback: callback,
+                    callThrough: callThrough || false
+                };
+                if (existing) {
+                    exports.extend(existing, update)
                 }
                 else {
-                    data = JSON.stringify(params);
-                    headers['Content-Type'] = 'application/json';
+                    self.routes.push(update);
                 }
+                return self;
+            },
+            get: function (self, url, headers, sync) {
+                return self._send('GET', url, null, headers, sync);
+            },
+            del: function (self, url, headers, sync) {
+                return self._send('DELETE', url, null, headers, sync);
+            },
+            patch: function (self, url, params, headers, sync) {
+                return self._send('PATCH', url, params, headers, sync);
+            },
+            post: function (self, url, params, headers, sync) {
+                return self._send('POST', url, params, headers, sync);
+            },
+            put: function (self, url, params, headers, sync) {
+                return self._send('PUT', url, params, headers, sync);
+            },
+            upload: function (self, url, file, headers, sync) {
+                return self._send('POST', url, file, headers, sync, true);
+            },
+            _send: function (self, method, url, params, headers, sync, uploadFile) {
+                exports.check(method, String);
+                exports.check(method, url);
 
-                var proceed = self._triggerInterceptors(
-                    'request', [params, method, url, params, headers]);
-                if (!proceed) return;
+                return new core.Promise(function (resolve, reject) {
+                    headers = headers || {};
+                    if (self.headers) exports.extend(headers, self.headers);
+
+                    var data;
+                    if (uploadFile) {
+                        data = new FormData();
+                        data.append("upload", params);
+                        data.upload = params;
+                    }
+                    else {
+                        data = JSON.stringify(params);
+                        headers['Content-Type'] = 'application/json';
+                    }
+
+                    var proceed = self._triggerInterceptors(
+                        'request', [params, method, url, params, headers]);
+                    if (!proceed) return;
 
 
-                var route = self._matchRoute(method, url);
+                    var route = self._matchRoute(method, url);
 
-                if (route) {
-                    if (!route.callThrough) {
-                        var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
-                        self._resolveProxyResponse(response, {resolve: resolve, reject: reject});
+                    if (route) {
+                        if (!route.callThrough) {
+                            var response = route.callback(data, {headers: headers, url: url, method: method}) || [];
+                            self._resolveProxyResponse(response, {resolve: resolve, reject: reject});
+                        }
+                    }
+
+                    if (!route || route.callThrough) {
+                        var xhr = new XMLHttpRequest();
+                        xhr.onload = function () {
+                            self._parseStatus(this);
+                            var proceed = self._triggerInterceptors('response', [this]);
+                            if (proceed) resolve(this);
+                        };
+                        xhr.onerror = function () {
+                            self._parseStatus(this);
+                            var proceed = self._triggerInterceptors('error', [this]);
+                            if (proceed) reject(this);
+                        };
+                        xhr.open(method, url, !sync);
+
+                        for (var key in headers)
+                            if (headers.hasOwnProperty(key))
+                                xhr.setRequestHeader(key, headers[key]);
+
+                        xhr.send(data);
+                    }
+                });
+            },
+            _triggerInterceptors: function (self, type, args) {
+                var exit;
+                for (var interceptor, i = 0; i < self.interceptors.length; i++) {
+                    interceptor = self.interceptors[i];
+                    if (interceptor[type]) {
+                        exit = interceptor[type].apply(null, args);
+                        if (exit === false) return false;
                     }
                 }
-
-                if (!route || route.callThrough) {
-                    var xhr = new XMLHttpRequest();
-                    xhr.onload = function() {
-                        self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('response', [this]);
-                        if (proceed) resolve(this);
-                    };
-                    xhr.onerror = function() {
-                        self._parseStatus(this);
-                        var proceed = self._triggerInterceptors('error', [this]);
-                        if (proceed) reject(this);
-                    };
-                    xhr.open(method, url, !sync);
-
-                    for (var key in headers)
-                        if (headers.hasOwnProperty(key))
-                            xhr.setRequestHeader(key, headers[key]);
-
-                    xhr.send(data);
-                }
-            });
-        },
-        _triggerInterceptors: function(self, type, args) {
-            var exit;
-            for (var interceptor,i=0; i<self.interceptors.length; i++) {
-                interceptor = self.interceptors[i];
-                if (interceptor[type]) {
-                    exit = interceptor[type].apply(null, args);
-                    if (exit === false) return false;
-                }
-            }
-            return true;
-        },
-        _matchRoute: function(self, method, url) {
-            var result, route;
-            var priority = -1;
-            for (var i = 0; i < self.routes.length; i++) {
-                route = self.routes[i];
-                if (route.method == method && route.pattern.test(url)) {
-                    if (route.priority > priority) {
-                        priority = route.priority;
-                        result = route;
+                return true;
+            },
+            _matchRoute: function (self, method, url) {
+                var result, route;
+                var priority = -1;
+                for (var i = 0; i < self.routes.length; i++) {
+                    route = self.routes[i];
+                    if (route.method == method && route.pattern.test(url)) {
+                        if (route.priority > priority) {
+                            priority = route.priority;
+                            result = route;
+                        }
                     }
                 }
-            }
-            return result;
-        },
-        _resolveProxyResponse: function(self, response, resolver) {
-            var promise = response;
-            if (!promise.then) {
-                promise = core.Promise.resolve(response);
-            }
-            promise.then(function(response) {
-                var responseObject = {
-                    status: response[0],
-                    statusText: response[3] || self._defaultStatusText[response[0]],
-                    getResponseHeader: function(name) {
-                        var headers = response[2] || {};
-                        return headers[name];
-                    },
-                    responseText: modar.isString(response[1]) ?
-                        response[1] : JSON.stringify(response[1])
+                return result;
+            },
+            _resolveProxyResponse: function (self, response, resolver) {
+                var promise = response;
+                if (!promise.then) {
+                    promise = core.Promise.resolve(response);
+                }
+                promise.then(function (response) {
+                    var responseObject = {
+                        status: response[0],
+                        statusText: response[3] || self._defaultStatusText[response[0]],
+                        getResponseHeader: function (name) {
+                            var headers = response[2] || {};
+                            return headers[name];
+                        },
+                        responseText: exports.isString(response[1]) ?
+                            response[1] : JSON.stringify(response[1])
+                    };
+
+                    self._parseStatus(responseObject);
+                    var proceed = self._triggerInterceptors('response', [responseObject]);
+
+                    if (proceed) {
+                        resolver.resolve(responseObject);
+                    }
+                });
+            },
+            _parseStatus: function (self, thisArg) {
+                var status = thisArg.status;
+                thisArg.http = {
+                    success: status >= 200 && status < 400,
+                    redirect: status >= 300 && status < 400,
+                    error: status >= 400,
+                    unavailable: status == 503,
+                    serverError: status >= 500,
+                    clientError: status >= 400 && status < 500,
+                    conflict: status == 409,
+                    created: status == 201,
+                    unauthorized: status == 401,
+                    missing: status == 404,
+                    badRequest: status == 400,
+                    noContent: status == 204,
+                    ok: status == 200,
+                    network: status == 0 || status === undefined
                 };
-                
-                self._parseStatus(responseObject);
-                var proceed = self._triggerInterceptors('response', [responseObject]);
-
-                if (proceed) {
-                    resolver.resolve(responseObject);
-                }
-            });
-        },
-        _parseStatus: function(self, thisArg) {
-            var status = thisArg.status;
-            thisArg.http = {
-                success: status >= 200 && status < 400,
-                redirect: status >=300 && status < 400,
-                error: status >= 400,
-                unavailable: status == 503,
-                serverError: status >= 500,
-                clientError: status >= 400 && status < 500,
-                conflict: status == 409,
-                created: status == 201,
-                unauthorized: status == 401,
-                missing: status == 404,
-                badRequest: status == 400,
-                noContent: status == 204,
-                ok: status == 200,
-                network: status == 0 || status === undefined
-            };
-        }
-    });
-
-modar.requests = modar.module('requests');
-modar.module('router')
-
-    .__new__(function(self) {
-        self.proxy = {
-            setHash: function(hash) {
-                window.location.hash = hash;
-            },
-            setHref: function(href) {
-                window.location.href = href;
-            },
-            setPathname: function(path) {
-                window.location.pathname = path;
-            },
-            getHash: function() {
-                return window.location.hash;
-            },
-            getHref: function() {
-                return window.location.href;
-            },
-            getPathname: function() {
-                return window.location.pathname;
             }
-        };
-    })
-
-    .__init__(function(self) {
-        self._routes = {};
-        self._params = {};
-        self._promises = [];
-
-        window.addEventListener("hashchange", function() {
-            self._onchange.call(self);
         });
-    })
+})(jQuip);
 
-    .def({
-        mockSetup: function(self, throwErrorOnRefresh) {
-            modar.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
+(function(exports) {
+    exports.router = exports.module('router')
 
-            spyOn(self.proxy, 'setHash').and.callFake(function(value) {
-                self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
-                modar.defer(self._onchange);
+        .__new__(function (self) {
+            self.proxy = {
+                setHash: function (hash) {
+                    window.location.hash = hash;
+                },
+                setHref: function (href) {
+                    window.location.href = href;
+                },
+                setPathname: function (path) {
+                    window.location.pathname = path;
+                },
+                getHash: function () {
+                    return window.location.hash;
+                },
+                getHref: function () {
+                    return window.location.href;
+                },
+                getPathname: function () {
+                    return window.location.pathname;
+                }
+            };
+        })
+
+        .__init__(function (self) {
+            self._routes = {};
+            self._params = {};
+            self._promises = [];
+
+            window.addEventListener("hashchange", function () {
+                self._onchange.call(self);
             });
+        })
 
-            spyOn(self.proxy, 'getHash').and.callFake(function() {
-                var hash = self.proxy.getHref().split('#')[1];
-                return hash ? ('#' + hash) : '';
-            });
+        .def({
+            mockSetup: function (self, throwErrorOnRefresh) {
+                exports.assert(jasmine, "mockSetup() can only be called in Jasmine testing.");
 
-            spyOn(self.proxy, 'setHref').and.callFake(function(value) {
-                if (throwErrorOnRefresh)
-                    throw new Error('Page refresh detected. Redirection to: ' + value);
-                self.proxy._href = value;
-            });
+                spyOn(self.proxy, 'setHash').and.callFake(function (value) {
+                    self.proxy.setHref(self.proxy.getHref().split('#')[0] + '#' + value);
+                    exports.defer(self._onchange);
+                });
 
-            spyOn(self.proxy, 'getHref').and.callFake(function() {
-                return self.proxy._href || window.location.href;
-            });
+                spyOn(self.proxy, 'getHash').and.callFake(function () {
+                    var hash = self.proxy.getHref().split('#')[1];
+                    return hash ? ('#' + hash) : '';
+                });
 
-            spyOn(self.proxy, 'setPathname').and.callFake(function(value) {
-                if (throwErrorOnRefresh)
-                    throw new Error('Page refresh detected. Redirection to: ' + value);
-                self.proxy.setHref(self.proxy.getHref().replace(self.proxy.getPathname(), value));
-            });
+                spyOn(self.proxy, 'setHref').and.callFake(function (value) {
+                    if (throwErrorOnRefresh)
+                        throw new Error('Page refresh detected. Redirection to: ' + value);
+                    self.proxy._href = value;
+                });
 
-            spyOn(self.proxy, 'getPathname').and.callFake(function() {
-                var href = self.proxy.getHref();
-                var pathname = href.replace('://', '').split('/', 1)[1] || "";
-                pathname = pathname.split('?')[0].split('#')[0];
-                return pathname;
-            });
-        },
-        refresh: function(self) {
-            modar.defer(function() {
-                self._onchange(self);
-            });
-        },
-        route: function(self, urls, callback) {
-            urls = modar.isString(urls) ? [urls] : urls;
-            for (var url,i=0; i < urls.length; i++) {
-                url = urls[i];
-                self._routes[url] = self._routes[url] || [];
-                self._routes[url].push(callback);
-            }
-            return self;
-        },
-        _onchange: function (self) {
-            var paths = self.proxy.getHash().slice(2).split('?')[0].split("/");
+                spyOn(self.proxy, 'getHref').and.callFake(function () {
+                    return self.proxy._href || window.location.href;
+                });
 
-            var queryParams = self.parseQuery();
-            var route = "";
+                spyOn(self.proxy, 'setPathname').and.callFake(function (value) {
+                    if (throwErrorOnRefresh)
+                        throw new Error('Page refresh detected. Redirection to: ' + value);
+                    self.proxy.setHref(self.proxy.getHref().replace(self.proxy.getPathname(), value));
+                });
 
-            modar.map(function(elem, i) {
-                route = route + "/" + elem;
-                var callbacks = self._routes[i == paths.length-1 ? route : route + "/*"];
-                if (callbacks && callbacks.length > 0) {
-                    for (var j=0; j < callbacks.length; j++) {
-                        callbacks[j].call(self, queryParams);
+                spyOn(self.proxy, 'getPathname').and.callFake(function () {
+                    var href = self.proxy.getHref();
+                    var pathname = href.replace('://', '').split('/', 1)[1] || "";
+                    pathname = pathname.split('?')[0].split('#')[0];
+                    return pathname;
+                });
+            },
+            refresh: function (self) {
+                exports.defer(function () {
+                    self._onchange(self);
+                });
+            },
+            route: function (self, urls, callback) {
+                urls = exports.isString(urls) ? [urls] : urls;
+                for (var url, i = 0; i < urls.length; i++) {
+                    url = urls[i];
+                    self._routes[url] = self._routes[url] || [];
+                    self._routes[url].push(callback);
+                }
+                return self;
+            },
+            _onchange: function (self) {
+                var paths = self.proxy.getHash().slice(2).split('?')[0].split("/");
+
+                var queryParams = self.parseQuery();
+                var route = "";
+
+                exports.map(function (elem, i) {
+                    route = route + "/" + elem;
+                    var callbacks = self._routes[i == paths.length - 1 ? route : route + "/*"];
+                    if (callbacks && callbacks.length > 0) {
+                        for (var j = 0; j < callbacks.length; j++) {
+                            callbacks[j].call(self, queryParams);
+                        }
+                    }
+                }, paths);
+
+                // Resolve all promises attached to .go()
+                for (var i = 0; i < self._promises.length; i++) {
+                    self._promises[i].resolve();
+                }
+                // Clear resolved promises
+                self._promises = [];
+            },
+            parseQuery: function (self, queryString) {
+                var hash = queryString || self.proxy.getHash();
+                var query = [];
+                var querySeparatorIndex = hash.indexOf("?");
+                if (querySeparatorIndex != -1) {
+                    query = hash.slice(querySeparatorIndex + 1).split('&');
+                }
+                var queryParams = {};
+                var valuePair;
+                exports.map(function (elem) {
+                    valuePair = elem.split("=");
+                    queryParams[valuePair[0]] = decodeURIComponent(valuePair[1]);
+                }, query);
+                return queryParams;
+            },
+            asQueryString: function (self, params) {
+                var result = "?";
+                for (var name in params) {
+                    if (params.hasOwnProperty(name) && params[name] !== undefined) {
+                        result += name + "=" + encodeURIComponent(params[name]) + "&";
                     }
                 }
-            }, paths);
+                return result.substr(0, result.length - 1);
+            },
+            go: function (self, uri, force) {
+                exports.check(uri, String);
 
-            // Resolve all promises attached to .go()
-            for (var i=0; i < self._promises.length; i++) {
-                self._promises[i].resolve();
-            }
-            // Clear resolved promises
-            self._promises = [];
-        },
-        parseQuery: function(self, queryString) {
-            var hash = queryString || self.proxy.getHash();
-            var query = [];
-            var querySeparatorIndex = hash.indexOf("?");
-            if (querySeparatorIndex != -1) {
-                query = hash.slice(querySeparatorIndex+1).split('&');
-            }
-            var queryParams = {};
-            var valuePair;
-            modar.map(function(elem) {
-                valuePair = elem.split("=");
-                queryParams[valuePair[0]] = decodeURIComponent(valuePair[1]);
-            }, query);
-            return queryParams;
-        },
-        asQueryString: function(self, params) {
-            var result = "?";
-            for (var name in params) {
-                if (params.hasOwnProperty(name) && params[name] !== undefined) {
-                    result += name + "=" + encodeURIComponent(params[name]) + "&";
+                var promise = new core.Promise(function (resolve, reject) {
+                    self._promises.push({resolve: resolve, reject: reject});
+                });
+
+                self.proxy.setHash(uri + this.asQueryString(self._params));
+
+                if (force)
+                    self.refresh();
+
+                return promise;
+            },
+            query: function (self, params) {
+                exports.check(params, Object);
+                var queryParams = self.parseQuery();
+                for (var name in params) {
+                    if (params.hasOwnProperty(name)) queryParams[name] = params[name];
                 }
+                self._params = queryParams;
+                self.proxy.setHref(self.proxy.getHref().split("?")[0] + self.asQueryString(self._params));
+            },
+            redirect: function (self, pathname) {
+                self.proxy.setPathname(pathname);
             }
-            return result.substr(0, result.length-1);
-        },
-        go: function (self, uri, force) {
-            modar.check(uri, String);
-
-            var promise = new core.Promise(function(resolve, reject) {
-                self._promises.push({resolve: resolve, reject: reject});
-            });
-
-            self.proxy.setHash(uri + this.asQueryString(self._params));
-
-            if (force)
-                self.refresh();
-
-            return promise;
-        },
-        query: function (self, params) {
-            modar.check(params, Object);
-            var queryParams = self.parseQuery();
-            for (var name in params) {
-                if (params.hasOwnProperty(name)) queryParams[name] = params[name];
-            }
-            self._params = queryParams;
-            self.proxy.setHref(self.proxy.getHref().split("?")[0] + self.asQueryString(self._params));
-        },
-        redirect: function(self, pathname) {
-            self.proxy.setPathname(pathname);
-        }
-    });
-
-modar.router = modar.module('router');
+        });
+})(jQuip);
