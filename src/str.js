@@ -50,4 +50,4 @@
     module.str = function(str) {
         return new PyString(str || '');
     };
-})(modar);
+})(jQuip);

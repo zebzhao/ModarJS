@@ -1,54 +1,54 @@
 describe('cache.module', function () {
     beforeEach(function(done) {
-        modar.initialize('cache').then(function() {
+        jQuip.initialize('cache').then(function() {
             done();
         });
     });
 
 
     afterEach(function() {
-        modar.cache.flush();
+        jQuip.cache.flush();
     });
 
 
     it('should move cached keys to another key', function() {
-        modar.cache.store("keyA", "");
-        expect(modar.cache.get("keyA")).toBe("");
-        modar.cache.move("keyA", "keyB");
-        expect(modar.cache.get("keyA")).toBeUndefined();
-        expect(modar.cache.get("keyB")).toBe("");
-        modar.cache.move("keyB", "keyB");
-        expect(modar.cache.get("keyB")).toBe("");
+        jQuip.cache.store("keyA", "");
+        expect(jQuip.cache.get("keyA")).toBe("");
+        jQuip.cache.move("keyA", "keyB");
+        expect(jQuip.cache.get("keyA")).toBeUndefined();
+        expect(jQuip.cache.get("keyB")).toBe("");
+        jQuip.cache.move("keyB", "keyB");
+        expect(jQuip.cache.get("keyB")).toBe("");
     });
 
 
     it('should delete cached key', function() {
-        modar.cache.store("keyB", "test");
-        expect(modar.cache.get("keyB")).toBe("test");
-        expect(modar.cache.contains("keyB")).toBeTruthy();
-        expect(modar.cache.delete("keyB"));
-        expect(modar.cache.get("keyB")).toBeUndefined();
-        expect(modar.cache.contains("keyB")).toBeFalsy();
+        jQuip.cache.store("keyB", "test");
+        expect(jQuip.cache.get("keyB")).toBe("test");
+        expect(jQuip.cache.contains("keyB")).toBeTruthy();
+        expect(jQuip.cache.delete("keyB"));
+        expect(jQuip.cache.get("keyB")).toBeUndefined();
+        expect(jQuip.cache.contains("keyB")).toBeFalsy();
     });
 
 
     it('should get keys', function() {
-        modar.cache.store("keyZ", "one");
-        expect(modar.cache.keys()).toEqual(["keyZ"]);
+        jQuip.cache.store("keyZ", "one");
+        expect(jQuip.cache.keys()).toEqual(["keyZ"]);
     });
 
 
     it('should flush all', function() {
-        modar.cache.store("keyZ", "one");
-        expect(modar.cache.keys().length).toBe(1);
-        modar.cache.flush();
-        expect(modar.cache.keys().length).toBe(0);
+        jQuip.cache.store("keyZ", "one");
+        expect(jQuip.cache.keys().length).toBe(1);
+        jQuip.cache.flush();
+        expect(jQuip.cache.keys().length).toBe(0);
     });
 
 
     it('should fetch values from cache', function(done) {
-        modar.cache.store("keyZ", "one");
-        modar.cache.fetch("keyZ",
+        jQuip.cache.store("keyZ", "one");
+        jQuip.cache.fetch("keyZ",
             function(a) { return a + "--server-parsing" })
             .then(function(value) {
                 expect(value.result).toBe("one");
@@ -60,7 +60,7 @@ describe('cache.module', function () {
 
     describe('cache.module fetch', function() {
         beforeEach(function(done) {
-            modar.initialize('requests').then(function(requests) {
+            jQuip.initialize('requests').then(function(requests) {
                 requests.whenGET(/cachekeyZ/, function() {
                     return [200, "Awesome"];
                 });
@@ -69,7 +69,7 @@ describe('cache.module', function () {
         });
 
         it('should fetch values from server', function(done) {
-            modar.cache.fetch("cachekeyZ",
+            jQuip.cache.fetch("cachekeyZ",
                 function(value) { return value + ":Parsed"; })
                 .then(function(context) {
                     expect(context.result).toBe("Awesome:Parsed");

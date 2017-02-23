@@ -7,52 +7,52 @@ describe('modar', function () {
                 return [a, b, c, d, e, f];
             }
         };
-        functions.abc = modar.partial(functions.abc, 1, 2, 3);
+        functions.abc = jQuip.partial(functions.abc, 1, 2, 3);
         expect(functions.abc.call(0, 4, 5, 6)).toEqual([1, 2, 3, 4, 5, 6]);
     });
 
 
     it('map', function() {
-        expect(modar.map(function (x) { return x*2 },
+        expect(jQuip.map(function (x) { return x*2 },
             [1, 2, 3])).toEqual([2, 4, 6]);
-        expect(modar.map(function (x) { return x*2 },
+        expect(jQuip.map(function (x) { return x*2 },
             {1:1, 2:2, 3:3})).toEqual({1:2, 2:4, 3:6});
     });
 
 
     it('type', function() {
-        expect(modar.type(function () {})).toBe('function');
+        expect(jQuip.type(function () {})).toBe('function');
     });
 
 
     it('it should extend like overwrite', function() {
-        expect(modar.extend({a: "1"}, {a: "2"})).toEqual({a: "2"});
-        expect(modar.extend({a: "1"}, {a: undefined})).toEqual({a: "1"});
-        expect(modar.extend({a: "1"}, {a: null})).toEqual({a: null});
+        expect(jQuip.extend({a: "1"}, {a: "2"})).toEqual({a: "2"});
+        expect(jQuip.extend({a: "1"}, {a: undefined})).toEqual({a: "1"});
+        expect(jQuip.extend({a: "1"}, {a: null})).toEqual({a: null});
     });
 
 
     it('range', function() {
-        expect(modar.range(3)).toEqual([0, 1, 2]);
-        expect(modar.range(3, 6)).toEqual([3, 4, 5]);
-        expect(modar.range(3, 6, 2)).toEqual([3, 5]);
+        expect(jQuip.range(3)).toEqual([0, 1, 2]);
+        expect(jQuip.range(3, 6)).toEqual([3, 4, 5]);
+        expect(jQuip.range(3, 6, 2)).toEqual([3, 5]);
     });
 
 
     it('any', function() {
-        expect(modar.any(function(a) {return a==1}, {'1': 1, '2': 2})).toBeTruthy();
-        expect(modar.any(function(a) {return a==2}, {'2': 1})).toBeFalsy();
+        expect(jQuip.any(function(a) {return a==1}, {'1': 1, '2': 2})).toBeTruthy();
+        expect(jQuip.any(function(a) {return a==2}, {'2': 1})).toBeFalsy();
     });
 
 
     it('all', function() {
-        expect(modar.all(function(a) {return a==1}, {'1': 1, '2': 2})).toBeFalsy();
-        expect(modar.all(function(a) {return a==1}, {'2': 1})).toBeTruthy();
+        expect(jQuip.all(function(a) {return a==1}, {'1': 1, '2': 2})).toBeFalsy();
+        expect(jQuip.all(function(a) {return a==1}, {'2': 1})).toBeTruthy();
     });
 
 
     it('should load requests', function(done) {
-        modar.initialize('requests').then(function() {
+        jQuip.initialize('requests').then(function() {
             done();
         });
     });
@@ -60,24 +60,24 @@ describe('modar', function () {
 
     it('should handle duplicate loading', function(done) {
         var initCount = 0;
-        modar.module('dup1').__init__(function() {
+        jQuip.module('dup1').__init__(function() {
             initCount++;
         });
-        modar.initialize('dup1').then(function() {
+        jQuip.initialize('dup1').then(function() {
             // This was called first, will initiate actual loading.
             initCount++;
             expect(initCount).toBe(3);
             done();
         });
-        modar.initialize('dup1').then(function() {
+        jQuip.initialize('dup1').then(function() {
             initCount++;
         });
     });
 
 
     it('should handle aliasing', function() {
-        modar.alias('http://bull.js', 'cow.js');
-        modar.import('http://bull.js');
+        jQuip.alias('http://bull.js', 'cow.js');
+        jQuip.import('http://bull.js');
         expect(document.head.getElementsByTagName('script')[0].getAttribute('src')).toBe('cow.js');
     });
 });
