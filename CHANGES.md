@@ -3,6 +3,10 @@ jQuip Changelog
 
 Here you can see the full list of changes between each ModarJS release.
 
+Version 0.9.1
+-----------
+- Fix hotkey module scopes
+
 Version 0.9.0
 -----------
 - Renamed to jQuip
