@@ -73,6 +73,10 @@
                 for (var handler, i = 0; i < self._handlers[key].length; i++) {
                     handler = self._handlers[key][i];
 
+                    if (handler.scope != self.scope && handler.scope != 'all' && self.scope != 'all') {
+                        continue;
+                    }
+
                     var handlerMods = handler.mods;
                     var modifiersMatch = handlerMods.length > 0;
 
