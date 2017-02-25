@@ -2962,10 +2962,14 @@ else __g.core = __e;
                     return pathname;
                 });
             },
-            refresh: function (self) {
-                exports.defer(function () {
-                    self._onchange(self);
-                });
+            refresh: function (self, force) {
+                if (!self._refreshInProgress || force) {
+                    self._refreshInProgress = true;
+                    exports.defer(function () {
+                        self._onchange(self);
+                        self._refreshInProgress = false;
+                    });
+                }
             },
             route: function (self, urls, callback) {
                 urls = exports.isString(urls) ? [urls] : urls;
