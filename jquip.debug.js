@@ -2843,11 +2843,14 @@ else __g.core = __e;
                 return result;
             },
             _resolveProxyResponse: function (self, response, resolver) {
-                var promise = response;
-                if (!promise.then) {
-                    promise = core.Promise.resolve(response);
+                if (response.then) {
+                    response.then(function($response) {
+                        resolver.resolve($response);
+                    }, function(message) {
+                        resolver.reject(message);
+                    });
                 }
-                promise.then(function (response) {
+                else {
                     var responseObject = {
                         status: response[0],
                         statusText: response[3] || self._defaultStatusText[response[0]],
@@ -2865,7 +2868,7 @@ else __g.core = __e;
                     if (proceed) {
                         resolver.resolve(responseObject);
                     }
-                });
+                }
             },
             _parseStatus: function (self, thisArg) {
                 var status = thisArg.status;
