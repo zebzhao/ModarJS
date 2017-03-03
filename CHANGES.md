@@ -3,6 +3,11 @@ jQuip Changelog
 
 Here you can see the full list of changes between each ModarJS release.
 
+Version 0.9.2
+-----------
+- Fix multiple `router.refresh` being triggered in 1 frame
+- Fix chained promises not working for `whenGET` + et al. responders
+
 Version 0.9.1
 -----------
 - Fix hotkey module scopes

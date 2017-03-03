@@ -2843,11 +2843,14 @@ else __g.core = __e;
                 return result;
             },
             _resolveProxyResponse: function (self, response, resolver) {
-                var promise = response;
-                if (!promise.then) {
-                    promise = core.Promise.resolve(response);
+                if (response.then) {
+                    response.then(function($response) {
+                        resolver.resolve($response);
+                    }, function(message) {
+                        resolver.reject(message);
+                    });
                 }
-                promise.then(function (response) {
+                else {
                     var responseObject = {
                         status: response[0],
                         statusText: response[3] || self._defaultStatusText[response[0]],
@@ -2865,7 +2868,7 @@ else __g.core = __e;
                     if (proceed) {
                         resolver.resolve(responseObject);
                     }
-                });
+                }
             },
             _parseStatus: function (self, thisArg) {
                 var status = thisArg.status;
@@ -2962,10 +2965,14 @@ else __g.core = __e;
                     return pathname;
                 });
             },
-            refresh: function (self) {
-                exports.defer(function () {
-                    self._onchange(self);
-                });
+            refresh: function (self, force) {
+                if (!self._refreshInProgress || force) {
+                    self._refreshInProgress = true;
+                    exports.defer(function () {
+                        self._onchange(self);
+                        self._refreshInProgress = false;
+                    });
+                }
             },
             route: function (self, urls, callback) {
                 urls = exports.isString(urls) ? [urls] : urls;
