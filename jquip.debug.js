@@ -243,37 +243,39 @@
     module.extend(module, {
         assert: function(cond) {
             if (!cond) {
-                console.error.apply(console, [].slice.call(arguments).slice(1));
+                if (console && console.error && console.error.apply)
+                    console.error.apply(console, [].slice.call(arguments).slice(1));
                 debugger;
             }
+            return cond;
         },
         check: function(obj, schema) {
             if (schema === Object) {
-                module.assert(module.isObject(obj),
+                return module.assert(module.isObject(obj),
                     'expected Object got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (schema == Array) {
-                module.assert(module.isArray(obj),
+                return module.assert(module.isArray(obj),
                     'expected Array got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (schema == String) {
-                module.assert(module.isString(obj),
+                return module.assert(module.isString(obj),
                     'expected String got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (schema == Boolean) {
-                module.assert(module.isBoolean(obj),
+                return module.assert(module.isBoolean(obj),
                     'expected Boolean got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (schema == Number) {
-                module.assert(module.isNumber(obj),
+                return module.assert(module.isNumber(obj),
                     'expected Number got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (schema == Function) {
-                module.assert(module.isFunction(obj),
+                return module.assert(module.isFunction(obj),
                     'expected Function got ' + Object.prototype.toString.call(obj), obj);
             }
             else if (module.isFunction(schema)) {
-                module.assert(schema.call(obj, obj),
+                return module.assert(schema.call(obj, obj),
                     'type check function returned false', obj);
             }
             else if (module.isObject(schema)) {
@@ -285,8 +287,9 @@
                     }
                 }
                 catch (e) {
-                    module.assert(false, 'Object does not match check schema.', [obj, schema]);
+                    return module.assert(false, 'Object does not match check schema.', [obj, schema]);
                 }
+                return true;
             }
         },
         isArray: function(obj) {

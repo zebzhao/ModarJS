@@ -3,6 +3,10 @@ jQuip Changelog
 
 Here you can see the full list of changes between each ModarJS release.
 
+Version 0.9.3
+-----------
+- Improved `assert` and `check` call to return `false` if failed
+
 Version 0.9.2
 -----------
 - Fix multiple `router.refresh` being triggered in 1 frame
