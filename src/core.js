@@ -1,4 +1,4 @@
- window.jQuip = window.$jQ = (function(exports) {
+ window.jQuip = window.$Q = (function(exports) {
     exports.defer = function (callback) {
         setTimeout(callback, 1);
     };
@@ -172,12 +172,7 @@
                 };
 
                 module.def = function (values) {
-                    var modified = exports.map(function (callable, i) {
-                        return exports.partial(callable, module);
-                    }, values);
-
-                    exports.extend(module, modified);
-
+                    exports.extend(module, values);
                     return module;
                 };
 
