@@ -52,6 +52,7 @@ describe('modar', function () {
 
 
     it('should load requests', function(done) {
+        jQuip.module('requests');
         jQuip.initialize('requests').then(function() {
             done();
         });
