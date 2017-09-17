@@ -1,16 +1,16 @@
-# ModarJS
+# jQuip
 
-[![Build Status](https://travis-ci.org/zebzhao/ModarJS.svg?branch=master)](https://travis-ci.org/zebzhao/ModarJS)
+[![Build Status](https://travis-ci.org/zebzhao/jQuip.svg?branch=master)](https://travis-ci.org/zebzhao/jQuip)
 
-ModarJS is a lightweight script loading library mocking Python modules.
+jQuip is a lightweight script loading library.
 
 Getting started
 ---
 
-You have following options to get ModarJS:
+You have following options to get the library:
 
-- Download the [latest release](https://github.com/zebzhao/ModarJS/releases/latest)
-- Clone the repo, `git clone git://github.com/zebzhao/ModarJS.git`.
+- Download the [latest release](https://github.com/zebzhao/jQuip/releases/latest)
+- Clone the repo, `git clone git://github.com/zebzhao/jQuip.git`.
 - Install with [Bower](http://bower.io): ```bower install jQuip```
 
 Table of Contents
@@ -32,12 +32,12 @@ Start by including the file in your main HTML file.
 
 For debugging
 ```html
-<script src="jQuip.debug.js" type="text/javascript"></script>
+<script src="jquip.debug.js" type="text/javascript"></script>
 ```
 
 For production
 ```html
-<script src="jQuip.min.js" type="text/javascript"></script>
+<script src="jquip.min.js" type="text/javascript"></script>
 ```
 
 ## Defining modules
@@ -46,7 +46,7 @@ Modules and can contain definitions of functions and variables, also provides en
 dependencies are loaded.
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('mymodule')
     .import('https://example.com/random.css')
     .import('path/to/file/random.js')
     .require('dependency')
@@ -55,34 +55,24 @@ jQuip.module('mymodule')
 To access the module one can use a function call, or access it through a variable:
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('myModule')
 // which is the same as:
-jQuip.modules.mymodule
-```
-
-There are also standard modules which can be accessed directly on the `jQuip` object:
-
-```javascript
-// List of standard modules included with ModarJS
-jQuip.requests
-jQuip.cache
-jQuip.router
-jQuip.hotkeys
+$Q.modules.myModule
 ```
 
 ## Loading modules
 Modules can be loaded and then initialized. A module can be loaded from by using:
 
 ```javascript
-jQuip.import(url).then(callback);
+$Q.import(url).then(callback);
 ```
 
 This will append either a `<script>` or `<link>` tag depending on if a '.js' file is included.
 When a module is defined, its `__new__` method is automatically immediately called.
-Note that `self` refers to the module (same as `jQuip.module.mymodule` in the case below).
+Note that `self` refers to the module (same as `$Q.module.mymodule` in the case below).
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('myModule')
     .__new__(function(self) {
         // Do stuff immediately.
         // ...
@@ -91,7 +81,7 @@ jQuip.module('mymodule')
 Note that multiple `__new__` callback functions can be defined, and they will be called in the defined order:
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('myModule')
     .__new__(function(self) {
         console.log('I am first')
     })
@@ -105,9 +95,9 @@ jQuip.module('mymodule')
 ```javascript
 // A module defined again will refer to the original defined module.
 // This allows module definitions to be split between many files.
-jQuip.module('mymodule')
+$Q.module('mymodule')
     .__new__(function(self) {
-        console.log('I am third')
+        console.log('I am third');
     });
 ```
 
@@ -121,15 +111,15 @@ Initializing will load all dependencies. The initialization process has 2 steps:
 To initialize a module manually:
 
 ```javascript
-jQuip.module('mymodule');
+$Q.module('myModule');
 // This can be called anywhere after the module definition.
-jQuip.initialize('mymodule');
+$Q.initialize('myModule');
 ```
 
 To initialize a module as a requirement by another module initialization process:
 
 ```javascript
-jQuip.module('child')
+$Q.module('child')
     .import('path/to/modules/mother.js')
     .require('mother');
 ```
@@ -138,7 +128,7 @@ When a module is initialized, its `__init__` method is automatically called.
 The `__init__` method(s) are called after dependencies are loaded.
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('mymodule')
     .__init__(function(self) {
         console.log('I am initialized')
     });
@@ -147,7 +137,7 @@ jQuip.module('mymodule')
 Similarly to `__new__`, when defining multiple `__init__` callbacks, they are called in the order of definition.
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('mymodule')
     .__init__(function(self) {
         self.a = 5;
     })
@@ -158,26 +148,28 @@ jQuip.module('mymodule')
 ```
 
 When a module is initialized, its dependencies will be loaded.
+
 ```javascript
-jQuip.module('mymodule')
+$Q.module('mymodule')
     .import('jquery.min.js')
     .import('angular.min.js')
     .import('https://example.com/script.js');
 
 // Dependencies will be loaded asynchronously (all at the same time).
-jQuip.initialize('mymodule');
+$Q.initialize('mymodule');
 ```
 
 An example on requiring modules. In the scenario below that you have 1 module that relies on another module:
+
 ```javascript
 // Inside mother.module.js
-jQuip.module('mother')
+$Q.module('mother')
     .__init__(function(self) {
         console.log('I will be initialized and loaded FIRST!')
     });
 
 // Inside child.module.js
-jQuip.module('child')
+$Q.module('child')
     .import('mother.module.js')
     .require('mother')
 
@@ -190,23 +182,21 @@ In the case that your submodule has very large dependencies and needs to be load
 
 ```javascript
 // Inside bigmodule.module.js
-jQuip.module('bigmodule')
+$Q.module('bigModule')
     .import('very-large-file.js')
     .__init__(function(self) {
         // do stuff
     });
 
 // Inside mymodule.module.js
-jQuip.module('mymodule')
+$Q.module('myModule')
     .import('bigmodule.module.js')
-    .require('router')   // Load standard module 'router'
     
     .__init__(function(self) {
-        jQuip.router
-            .route('bigmodule', function() {
-                // Initialize bigmodule when hitting mydomain.com/#bigmodule
-                jQuip.initialize('bigmodule');
-            });
+        // Load big module dependencies after 1s
+        setTimeout(function() {
+            $Q.initialize('bigModule');
+        }, 1000);
     });
 ```
 
@@ -215,7 +205,7 @@ jQuip.module('mymodule')
 Methods can be defined in a module in the following way:
 
 ```javascript
-jQuip.module('mymodule')
+$Q.module('myModule')
     .def({
         testMethod1: function(self, string) {
         }),
@@ -223,7 +213,7 @@ jQuip.module('mymodule')
             self.testMethod1(string);
         });
     });
-jQuip.modules['mymodule'].callsMethod1('Awesome');
+$Q.modules['mymodule'].callsMethod1('Awesome');
 ```
 
 Note that the methods are defined on the module instance and injected with a `self` argument.
@@ -236,77 +226,14 @@ Additional properties that are defined on top of module instances.
  * `__state__` - `'loading'` or `'loaded'` or `undefined`
  * `__initialized__` - true only when the module has finished initializing
  
-Standard modules
----
-
-To use a standard module, you need to first initialize it. Note that standard modules do not need to be loaded as they
-are included with ModarJS.
-```javascript
-jQuip.module('mymodule')
-    .require('hotkeys')
-    .__init__(function(self) {
-        jQuip.hotkeys.addKey('ctrl-f', function(e, handler) {
-            e.preventDefault(); // Prevents browser default for this shortcut
-            console.log('Ctrl-F was pressed!');
-        });
-    });
-```
-
-A list of current standard modules can be found below:
-
-* cache - For caching text on client-side.
-* hotkeys - For handling keyboard shortcuts.
-* requests - For http methods and uploads with ajax.
-* router - For handling client `hashchange` events.
-
-### hotkeys
-```javascript
-jQuip.hotkeys.addKey('ctrl-f', function(e, handler) {
-    e.preventDefault();  // Prevents browser default for this shortcut
-    console.log('Ctrl-F was pressed!');
-    console.log(handler);  // Contains meta information about the event.
-});
-```
-
-### requests
-```javascript
-// Standard get request, with authorization header
-jQuip.requests.get('https://example.com/api/user', {Authorization: 'Secret'})
-    .then(function(response) {
-        console.log('RESPONSE', response.responseText);
-    })
-// Synchronous call
-var xhr = jQuip.requests.post('https://example.com/api/user', {user: 'Steve'}, {'Content-Type': 'application/json'}, true);
-console.log(xhr.responseText);
-// Uploading files
-jQuip.requests.upload('https://example.com/api/user/1/files', fileObjectAPI)
-    .then(function(response) {
-        console.log(response.responseText);
-        if (!response.http.success) {
-            return core.Promise.reject('failed');  // ES6 promise library
-        }
-    });
-```
-
-### router
-```javascript
-jQuip.router
-    .route("/route1", function(queryParams) {
-        console.log('Route 1:', queryParams);
-    })
-    .route(["/route2", "/route2-1", "/route2-*"], function(queryParams) {
-        console.log('Route 2:', queryParams);
-    });
-```
-
 Jasmine Testing Support
 ---
-ModarJS officially supports Jasmine 2.0 Testing.
+jQuip officially supports Jasmine 2.0 Testing.
 
 
 ### Dependencies
 Sometimes you want to use CDNs, but this introduces problems when testing locally on a headless browser.
-ModarJS solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
+jQuip solves this issue by letting dynamic replacement of external dependencies with local ones during testing.
 
 Here's an example of how this works:
 
@@ -319,111 +246,27 @@ describe('mymodule', function () {
         var self = this;
         
         // This will replace any scripts loading www.example.com/external.js with /home/user/project/lib/external.js
-        jQuip.mockDependencies({
+        $Q.mockDependencies({
             "www.example.com/external.js": "lib/external.js"
         });
         
         // Wait till module has loaded asynchronously
-        jQuip.initialize('mymodule').then(function(mymodule) {
-            self.mymodule = mymodule;
+        $Q.initialize('myModule').then(function(myModule) {
+            self.myModule = myModule;
             done();
         });
     });
-```
-
-### Requests
-A fake server with responses can be completely mocked out.
-
-```javascript
-describe('mymodule', function () {
-    beforeEach(function(done) {
-        var self = this;
-        // Wait till module has loaded asynchronously
-        jQuip.initialize('mymodule').then(function(mymodule) {
-            self.mymodule = mymodule;
-            done();
-        });
-    });
-    
-    // Sets up server routes
-    beforeEach(function(done) {
-        jQuip.requests
-            .whenGET(/www.example.com\/myroute/, function(params, config) {
-                return [200, "Raw JSON array"];
-            })
-            .whenDELETE(/www.example.com\/myroute/, function(params, config) {
-                return [200, ""];
-            })
-            .whenPOST(/www.example.com\/myroute/, function(params, config) {
-                return [200, ""];
-            });
-    });
-    
-    it('should make server requests', function() {
-        this.mymodule.doSomething();
-    });
-});
-```
-
-### Router
-If you use Jasmine for hairy unit tests, you may often encounter this message in a large app that uses routing: `Some of your tests did a full page reload!`.
-This is sometimes not debuggable as you have no idea where it may be called. Other times it may even be necessary for the page to refresh.
-
-`jQuip.router` solves this problem by providing a `mockSetup()` method in Jasmine testing which allows page reloading to be handled properly.
-
-To redirect the page:
-
-```javascript
-// do this
-jQuip.module('mymodule')
-    .require('router')
-    .__init__(function(self) {
-        jQuip.router.proxy.setHref("www.example.com/new/location");
-    });
-
-// instead of this
-jQuip.module('mymodule')
-    .require('router')
-    .__init__(function(self) {
-        window.location.href = "www.example.com/new/location";
-    });
-```
-
-During tests the following will throw a proper error.
-The refresh error can also be fully suppressed and page refreshes will be ignored.
-
-```javascript
-describe('mymodule', function () {
-    beforeEach(function(done) {
-        var self = this;
-        // Wait till module has loaded asynchronously
-        jQuip.initialize('mymodule').then(function(mymodule) {
-            self.mymodule = mymodule;
-            done();
-        });
-    });
-    
-    it('should not throw page reload error', function() {
-        jQuip.router.mockSetup();
-        this.mymodule.gotoLocation();  // No error is thrown!
-    });
-    
-    it('should throw error with stack trace', function() {
-        jQuip.router.mockSetup(true);
-        this.mymodule.gotoLocation();  // Error is thrown on page refresh!
-    });
-});
 ```
 
 Developers
 ---
-First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build ModarJS. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
+First of all, install [Node](http://nodejs.org/). We use [Gulp](http://gulpjs.com) to build jQuip. If you haven't used Gulp before, you need to install the `gulp` package as a global install.
 
 ```
 npm install --global gulp
 ```
 
-If you haven't done so already, clone the ModarJS git repo.
+If you haven't done so already, clone the jQuip git repo.
 
 ```
 git clone git://github.com/zebzhao/jQuip.git
@@ -442,7 +285,7 @@ gulp build
 gulp build-debug
 ```
 
-The built version of ModarJS will be put in the same folder as ```jQuip.min.js``` and ```jQuip.debug.js```.
+The built version will be put in the same folder as ```jquip.min.js``` and ```jquip.debug.js```.
 
 ## Tests
 
@@ -451,7 +294,7 @@ This library aims for test 80%+ coverage. Since some functions cannot be tested 
 
 ## Contributing
 
-ModarJS follows the [GitFlow branching model](http://nvie.com/posts/a-successful-git-branching-model). The ```master``` branch always reflects a production-ready state while the latest development is taking place in the ```develop``` branch.
+This project follows the [GitFlow branching model](http://nvie.com/posts/a-successful-git-branching-model). The ```master``` branch always reflects a production-ready state while the latest development is taking place in the ```develop``` branch.
 
 Each time you want to work on a fix or a new feature, create a new branch based on the ```develop``` branch: ```git checkout -b BRANCH_NAME develop```. Only pull requests to the ```develop``` branch will be merged.
 
