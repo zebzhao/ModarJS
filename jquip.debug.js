@@ -274,17 +274,13 @@
                     'type check function returned false', obj);
             }
             else if (module.isObject(schema)) {
-                module.check(obj, Object);
-                try {
-                    for (var k in schema) {
-                        if (schema.hasOwnProperty(k))
-                            module.check(obj[k], schema[k]);
-                    }
+                var match = module.check(obj, Object);
+                for (var k in schema) {
+                    // Tricky, put match last to prevent short circuit
+                    if (schema.hasOwnProperty(k))
+                        match = module.check(obj[k], schema[k]) && match;
                 }
-                catch (e) {
-                    return module.assert(false, 'Object does not match check schema.', [obj, schema]);
-                }
-                return true;
+                return match;
             }
         },
         isArray: function(obj) {

@@ -1,6 +1,6 @@
 {
   "name": "jQuip",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "A straight forward client-side module loading library.",
   "main": "",
   "private": false,
