@@ -39,6 +39,8 @@
             }
             else if (module.isObject(schema)) {
                 var match = module.check(obj, Object);
+                if (!match) return false;
+                
                 for (var k in schema) {
                     // Tricky, put match last to prevent short circuit
                     if (schema.hasOwnProperty(k))

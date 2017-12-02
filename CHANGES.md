@@ -3,6 +3,10 @@ jQuip Changelog
 
 Here you can see the full list of changes between each ModarJS release.
 
+Version 0.10.1
+-----------
+- 
+
 Version 0.10.0
 -----------
 - Remove all modules except core, as they were badly written
