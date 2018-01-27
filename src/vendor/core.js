@@ -2,7 +2,7 @@
  * core-js 2.5.1
  * https://github.com/zloirock/core-js
  * License: http://rock.mit-license.org
- * © 2017 Denis Pushkarev
+ * © 2018 Denis Pushkarev
  */
 !function(__e, __g, undefined){
 'use strict';
@@ -1195,10 +1195,5 @@ module.exports = function (exec, skipClosing) {
 
 /***/ })
 /******/ ]);
-// CommonJS export
-if (typeof module != 'undefined' && module.exports) module.exports = __e;
-// RequireJS export
-else if (typeof define == 'function' && define.amd) define(function () { return __e; });
-// Export to global object
-else __g.core = __e;
+
 }(1, 1);

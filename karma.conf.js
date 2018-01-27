@@ -1,42 +1,41 @@
-module.exports = function(config){
-    config.set({
+module.exports = function (config) {
+  config.set({
 
-        basePath : './',
+    basePath: './',
 
-        logLevel: config.LOG_DEBUG,
+    logLevel: config.LOG_DEBUG,
 
-        files : [
-            'src/vendor/core.js',
-            'src/core.js',
-            {pattern: 'src/**/*.js', watched: true, included: true, served: true},
-            {pattern: 'tests/**/*.spec.js', watched: true, included: true, served: true}
-        ],
+    files: [
+      'src/vendor/core.js',
+      'src/index.js',
+      {pattern: 'src/**/*.js', watched: true, included: true, served: true},
+      {pattern: 'tests/**/*.spec.js', watched: true, included: true, served: true}
+    ],
 
-        exclude : [
-        ],
+    exclude: [],
 
-        reporters: ['progress', 'coverage'],
+    reporters: ['progress', 'coverage'],
 
-        preprocessors: {
-            'src/modules/*.js': ['coverage'],
-            'src/*.js': ['coverage']
-        },
+    preprocessors: {
+      'src/modules/*.js': ['coverage'],
+      'src/*.js': ['coverage']
+    },
 
-        // web server port
-        port: 9877,
+    // web server port
+    port: 9877,
 
-        singleRun: true,
+    singleRun: true,
 
-        autoWatch : false,
+    autoWatch: false,
 
-        frameworks: ['jasmine'],
+    frameworks: ['jasmine'],
 
-        browsers : ['PhantomJS'],
+    browsers: ['PhantomJS'],
 
-        plugins : [
-            'karma-jasmine',
-            'karma-phantomjs-launcher',
-            'karma-coverage'
-        ]
-    });
+    plugins: [
+      'karma-jasmine',
+      'karma-phantomjs-launcher',
+      'karma-coverage'
+    ]
+  });
 };
