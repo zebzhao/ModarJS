@@ -1,9 +1,13 @@
 (function (module) {
   module.extend(module, {
-    assert: function (cond) {
+    assert: function (cond, message, obj, throwError) {
       if (!cond) {
-        if (console && console.error && console.error.apply)
-          console.error.apply(console, [].slice.call(arguments).slice(1));
+        if (throwError) {
+          throw new Error(message);
+        }
+        else if (console && console.error && console.error.apply) {
+          console.error(message, obj);
+        }
       }
       return cond;
     },
@@ -41,7 +45,7 @@
           if (schema.hasOwnProperty(k))
             match = module.check(obj[k], schema[k], k) && match;
         }
-        if (throwError) {
+        if (!match && throwError) {
           throw new Error(message);
         } else {
           return match;

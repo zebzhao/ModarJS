@@ -4,7 +4,7 @@
 var gulp = require('gulp');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
-var files = ['node_modules/es6-promise/dist/es6-promise.auto.js', 'src/*.js'];
+var files = ['node_modules/es6-promise/dist/es6-promise.auto.js', 'src/index.js', 'src/assert.js'];
 
 gulp.task('build', function () {
   return gulp.src(files)
