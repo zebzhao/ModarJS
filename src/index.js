@@ -16,15 +16,6 @@ window.jQuip = window.$Q = (function (exports) {
     return target;
   };
 
-  exports.partial = function (callback) {
-    exports.check(callback, Function);
-    var args = [].slice.call(arguments).slice(1);  // Remove wrapped function
-    return function () {
-      var more_args = [].slice.call(arguments);
-      return callback.apply(this, args.concat(more_args));
-    }
-  };
-
   exports.alias = function (url, value) {
     var aliases = exports._aliases;
     if (aliases[url]) {
@@ -39,7 +30,7 @@ window.jQuip = window.$Q = (function (exports) {
 
   exports.import = function (url) {
     url = exports.alias(url);
-    return new core.Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
       if (exports._cache[url]) {
         exports._cache[url].push({resolve: resolve, reject: reject});
       }
@@ -122,7 +113,7 @@ window.jQuip = window.$Q = (function (exports) {
         };
 
         module._initialize = function () {
-          return new core.Promise(function (resolve, reject) {
+          return new Promise(function (resolve, reject) {
 
             switch (module.__state__) {
               case 'loaded':
@@ -158,11 +149,11 @@ window.jQuip = window.$Q = (function (exports) {
 
 
     function importScripts(scripts) {
-      return core.Promise.all(scripts.map(exports.import));
+      return Promise.all(scripts.map(exports.import));
     }
 
     function initializeModules(modules) {
-      return core.Promise.all(modules.map(exports.initialize));
+      return Promise.all(modules.map(exports.initialize));
     }
   };
 

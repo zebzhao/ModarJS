@@ -1,21 +1,16 @@
 describe('core', function () {
-  it('partial should inject arguments', function () {
-    var functions = {
-      abc: function (a, b, c, d, e, f) {
-        expect([a, b, c]).toEqual([1, 2, 3]);
-        expect(this).toEqual(0);
-        return [a, b, c, d, e, f];
-      }
-    };
-    functions.abc = jQuip.partial(functions.abc, 1, 2, 3);
-    expect(functions.abc.call(0, 4, 5, 6)).toEqual([1, 2, 3, 4, 5, 6]);
-  });
 
-
-  it('it should extend like overwrite', function () {
+  it('should extend like overwrite', function () {
     expect(jQuip.extend({a: "1"}, {a: "2"})).toEqual({a: "2"});
     expect(jQuip.extend({a: "1"}, {a: undefined})).toEqual({a: "1"});
     expect(jQuip.extend({a: "1"}, {a: null})).toEqual({a: null});
+  });
+
+
+  it("should resolve empty Promise.all", function (done) {
+    Promise.all([]).then(function () {
+      done();
+    });
   });
 
 

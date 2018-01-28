@@ -4,7 +4,6 @@
       if (!cond) {
         if (console && console.error && console.error.apply)
           console.error.apply(console, [].slice.call(arguments).slice(1));
-        debugger;
       }
       return cond;
     },

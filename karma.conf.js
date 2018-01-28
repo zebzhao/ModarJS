@@ -6,7 +6,7 @@ module.exports = function (config) {
     logLevel: config.LOG_DEBUG,
 
     files: [
-      'src/vendor/core.js',
+      'node_modules/es6-promise/dist/es6-promise.auto.js',
       'src/index.js',
       {pattern: 'src/**/*.js', watched: true, included: true, served: true},
       {pattern: 'tests/**/*.spec.js', watched: true, included: true, served: true}
